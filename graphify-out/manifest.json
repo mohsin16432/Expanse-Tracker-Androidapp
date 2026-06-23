@@ -1,0 +1,262 @@
+{
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/.graphify_detect.json": {
+    "mtime": 1782122736.337977,
+    "ast_hash": "55a31de92c2de83227ccc6d2b3619cc8",
+    "semantic_hash": "55a31de92c2de83227ccc6d2b3619cc8"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/build.gradle.kts": {
+    "mtime": 1781695674.1493707,
+    "ast_hash": "dbef4e3aec697f56155f1b64e7039dd0",
+    "semantic_hash": "dbef4e3aec697f56155f1b64e7039dd0"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ExpenseTrackerApp.kt": {
+    "mtime": 1781681601.422951,
+    "ast_hash": "96ceeb55a87325afe60c95e7ff35742b",
+    "semantic_hash": "96ceeb55a87325afe60c95e7ff35742b"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/MainActivity.kt": {
+    "mtime": 1781768465.1514876,
+    "ast_hash": "64d76bd7a0784fa980951b0c96df9ce7",
+    "semantic_hash": "64d76bd7a0784fa980951b0c96df9ce7"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/backup/BackupService.kt": {
+    "mtime": 1781690436.8969526,
+    "ast_hash": "e62db3e108c4fea000ca42e96f7218e2",
+    "semantic_hash": "e62db3e108c4fea000ca42e96f7218e2"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/AppContainer.kt": {
+    "mtime": 1781871004.3679352,
+    "ast_hash": "ed639a3565fb3d75c87690398833926e",
+    "semantic_hash": "ed639a3565fb3d75c87690398833926e"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/db/AppDatabase.kt": {
+    "mtime": 1781762839.9051867,
+    "ast_hash": "e81d6d574ea560aa462c149b0f7ad767",
+    "semantic_hash": "e81d6d574ea560aa462c149b0f7ad767"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/db/CategoryDao.kt": {
+    "mtime": 1781688414.3278532,
+    "ast_hash": "2b573eae9dc09a7af5fbbea036abe919",
+    "semantic_hash": "2b573eae9dc09a7af5fbbea036abe919"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/db/DataSourceDao.kt": {
+    "mtime": 1781691631.6914067,
+    "ast_hash": "723105af1e74c2f5134c3b0b58823881",
+    "semantic_hash": "723105af1e74c2f5134c3b0b58823881"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/db/PendingImportDao.kt": {
+    "mtime": 1781681791.5104632,
+    "ast_hash": "3eb82aa58ac8cf7117547da95f7974a5",
+    "semantic_hash": "3eb82aa58ac8cf7117547da95f7974a5"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/db/RoomConverters.kt": {
+    "mtime": 1781681775.0070357,
+    "ast_hash": "1895f6712510a10330f89f9102ba30f0",
+    "semantic_hash": "1895f6712510a10330f89f9102ba30f0"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/db/TransactionDao.kt": {
+    "mtime": 1781873163.2547739,
+    "ast_hash": "0b2c728ff3802d5d2fe3b60ffec875c7",
+    "semantic_hash": "0b2c728ff3802d5d2fe3b60ffec875c7"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/model/Models.kt": {
+    "mtime": 1781695684.0022392,
+    "ast_hash": "33577bffa2b18bf15a325e375067304b",
+    "semantic_hash": "33577bffa2b18bf15a325e375067304b"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/repo/CategoryRepository.kt": {
+    "mtime": 1781688445.4789567,
+    "ast_hash": "c49237d5dadc0751cbf5c51a3e0d80fe",
+    "semantic_hash": "c49237d5dadc0751cbf5c51a3e0d80fe"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/repo/DataSourceRepository.kt": {
+    "mtime": 1781691642.3391237,
+    "ast_hash": "ec658f5f67d557d6d322a674965adb8a",
+    "semantic_hash": "ec658f5f67d557d6d322a674965adb8a"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/repo/PendingImportRepository.kt": {
+    "mtime": 1781681809.188277,
+    "ast_hash": "7ac479a514495a5497c01fb211f87e70",
+    "semantic_hash": "7ac479a514495a5497c01fb211f87e70"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/repo/SettingsRepository.kt": {
+    "mtime": 1782121937.2229986,
+    "ast_hash": "38bfdeea1b0f3feca0231e719365ee26",
+    "semantic_hash": "38bfdeea1b0f3feca0231e719365ee26"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/data/repo/TransactionRepository.kt": {
+    "mtime": 1781873053.4922512,
+    "ast_hash": "0002c8a4a0d02b0f1eeb83b9d7dd15bc",
+    "semantic_hash": "0002c8a4a0d02b0f1eeb83b9d7dd15bc"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/ApprovedSmsFormat.kt": {
+    "mtime": 1781871308.918253,
+    "ast_hash": "c6bf3c294ca42004f4cf8f55f052adf9",
+    "semantic_hash": "c6bf3c294ca42004f4cf8f55f052adf9"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/SmsClassifier.kt": {
+    "mtime": 1781870972.6636894,
+    "ast_hash": "76626c758badbb0bf15b3d4e466f9c10",
+    "semantic_hash": "76626c758badbb0bf15b3d4e466f9c10"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/SmsHistoryImporter.kt": {
+    "mtime": 1781873062.26797,
+    "ast_hash": "4eb5f84199ddcd17880f0e6d99553e1a",
+    "semantic_hash": "4eb5f84199ddcd17880f0e6d99553e1a"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/SmsIngestor.kt": {
+    "mtime": 1782121985.05378,
+    "ast_hash": "b45fc3ef8a343f63badbe7d6dbe405d5",
+    "semantic_hash": "b45fc3ef8a343f63badbe7d6dbe405d5"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/SmsMessage.kt": {
+    "mtime": 1781681832.17454,
+    "ast_hash": "fb837e11077e66f04311382b97ab1055",
+    "semantic_hash": "fb837e11077e66f04311382b97ab1055"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/SmsReceiver.kt": {
+    "mtime": 1781681821.420636,
+    "ast_hash": "7bdcdcd9dadb28939928134c4f770ee7",
+    "semantic_hash": "7bdcdcd9dadb28939928134c4f770ee7"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/TransactionDraft.kt": {
+    "mtime": 1781692767.1312783,
+    "ast_hash": "21b29170ff1c5ebf68ec28f84c06a901",
+    "semantic_hash": "21b29170ff1c5ebf68ec28f84c06a901"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/UserSmsRegexFormat.kt": {
+    "mtime": 1782121901.5144563,
+    "ast_hash": "f4364b7bd7c2313d878e19c932b919d0",
+    "semantic_hash": "f4364b7bd7c2313d878e19c932b919d0"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/parsers/BankSmsParser.kt": {
+    "mtime": 1781681862.533499,
+    "ast_hash": "33ebaecf7053263f016c7d1bf1585bf9",
+    "semantic_hash": "33ebaecf7053263f016c7d1bf1585bf9"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/parsers/FblParser.kt": {
+    "mtime": 1781692797.402299,
+    "ast_hash": "974265de4e2d85ab1ff159a1150a9b3e",
+    "semantic_hash": "974265de4e2d85ab1ff159a1150a9b3e"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/parsers/HblParser.kt": {
+    "mtime": 1781694752.5188274,
+    "ast_hash": "1f94e7ea8c0b11e8a553d7ec7e307fe4",
+    "semantic_hash": "1f94e7ea8c0b11e8a553d7ec7e307fe4"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/parsers/JazzCashParser.kt": {
+    "mtime": 1782108114.0114093,
+    "ast_hash": "8a8ece4402e00a039e43125cfbb8ead1",
+    "semantic_hash": "8a8ece4402e00a039e43125cfbb8ead1"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ingest/parsers/ParseUtils.kt": {
+    "mtime": 1781681880.9771402,
+    "ast_hash": "80b31c7ac5ff54538663633f2c2d7730",
+    "semantic_hash": "80b31c7ac5ff54538663633f2c2d7730"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/llm/LlmClient.kt": {
+    "mtime": 1781690414.2424228,
+    "ast_hash": "b84bbe007a3a6cc42601376b7dfb8f96",
+    "semantic_hash": "b84bbe007a3a6cc42601376b7dfb8f96"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/llm/PoeOpenAiClient.kt": {
+    "mtime": 1781762069.5634549,
+    "ast_hash": "79bf6cc068879789b7abf7a32baccc6b",
+    "semantic_hash": "79bf6cc068879789b7abf7a32baccc6b"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ocr/ReceiptOcrService.kt": {
+    "mtime": 1781765043.6201205,
+    "ast_hash": "ae1ad867b8e58620c6f6ec1157cf6298",
+    "semantic_hash": "ae1ad867b8e58620c6f6ec1157cf6298"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/AppNav.kt": {
+    "mtime": 1781781494.2387412,
+    "ast_hash": "6f0c940ff0b4885959287ae376cb6e2a",
+    "semantic_hash": "6f0c940ff0b4885959287ae376cb6e2a"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/CategoryRules.kt": {
+    "mtime": 1781690448.5833023,
+    "ast_hash": "34b36294451bd5d895854cdab190f720",
+    "semantic_hash": "34b36294451bd5d895854cdab190f720"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/MoneyFormat.kt": {
+    "mtime": 1781682151.299376,
+    "ast_hash": "976b3882f2ce9eae1b47fbf07bc04d6b",
+    "semantic_hash": "976b3882f2ce9eae1b47fbf07bc04d6b"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/screens/CardsScreen.kt": {
+    "mtime": 1781876644.8839445,
+    "ast_hash": "291bfbe77039d55e2f33c22f99a9e069",
+    "semantic_hash": "291bfbe77039d55e2f33c22f99a9e069"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/screens/DashboardScreen.kt": {
+    "mtime": 1781875280.6885412,
+    "ast_hash": "87691180b52b1a084ba782833c30dcb9",
+    "semantic_hash": "87691180b52b1a084ba782833c30dcb9"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/screens/ManualExpenseScreen.kt": {
+    "mtime": 1781783108.9481442,
+    "ast_hash": "c280db5c8f9acfa7b636e3bd457b17c9",
+    "semantic_hash": "c280db5c8f9acfa7b636e3bd457b17c9"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/screens/ReviewScreen.kt": {
+    "mtime": 1781871017.5724695,
+    "ast_hash": "57712ac2c7b6bd501158f5f97e4b31bf",
+    "semantic_hash": "57712ac2c7b6bd501158f5f97e4b31bf"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/screens/SettingsScreen.kt": {
+    "mtime": 1782122101.613732,
+    "ast_hash": "18f9935f0123036361bd33fd22195298",
+    "semantic_hash": "18f9935f0123036361bd33fd22195298"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/screens/TransactionsScreen.kt": {
+    "mtime": 1781876630.7556112,
+    "ast_hash": "b8e30ba91e3d11ba11204d36f6170ad1",
+    "semantic_hash": "b8e30ba91e3d11ba11204d36f6170ad1"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/theme/Color.kt": {
+    "mtime": 1781768422.3966477,
+    "ast_hash": "b344fadca60d1a0acda2aa54bacf017b",
+    "semantic_hash": "b344fadca60d1a0acda2aa54bacf017b"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/theme/Theme.kt": {
+    "mtime": 1781771132.9910336,
+    "ast_hash": "6524ade485b993bdae6e095ab9ea9d8e",
+    "semantic_hash": "6524ade485b993bdae6e095ab9ea9d8e"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/java/com/trae/expensetracker/ui/theme/Type.kt": {
+    "mtime": 1781768434.0564706,
+    "ast_hash": "1453e78cf550f70949cfcd0ab145013c",
+    "semantic_hash": "1453e78cf550f70949cfcd0ab145013c"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/build.gradle.kts": {
+    "mtime": 1781687574.5169125,
+    "ast_hash": "e96a8cf9c1480b91511354f220b20a17",
+    "semantic_hash": "e96a8cf9c1480b91511354f220b20a17"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/gradlew": {
+    "mtime": 1781682821.9295268,
+    "ast_hash": "1b55ea5b0e5fc1eb95371fb67272795f",
+    "semantic_hash": "1b55ea5b0e5fc1eb95371fb67272795f"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/settings.gradle.kts": {
+    "mtime": 1781681526.813017,
+    "ast_hash": "e446cc39325db37692a9c767952551f0",
+    "semantic_hash": "e446cc39325db37692a9c767952551f0"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/DESIGN-BRIEF.md": {
+    "mtime": 1781766080.6541991,
+    "ast_hash": "eb314b84600ac38999cb615a2fade55c",
+    "semantic_hash": "eb314b84600ac38999cb615a2fade55c"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/README.md": {
+    "mtime": 1781682301.2280452,
+    "ast_hash": "d2fa736623fc812e97ad080105ad4868",
+    "semantic_hash": "d2fa736623fc812e97ad080105ad4868"
+  },
+  "/sessions/6a323f94a628fe87719febff/workspace/expense-tracker-android/app/src/main/res/drawable/app_icon.png": {
+    "mtime": 1781874333.007537,
+    "ast_hash": "cf07e3b106425968b3140d0b8157e8df",
+    "semantic_hash": "cf07e3b106425968b3140d0b8157e8df"
+  }
+}
