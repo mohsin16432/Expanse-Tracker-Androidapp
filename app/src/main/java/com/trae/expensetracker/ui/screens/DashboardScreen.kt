@@ -49,8 +49,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.trae.expensetracker.data.AppContainer
 import com.trae.expensetracker.data.model.TransactionDirection
+import com.trae.expensetracker.ui.BalanceEngine
+import com.trae.expensetracker.ui.BudgetEngine
 import com.trae.expensetracker.ui.CategoryRules
+import com.trae.expensetracker.ui.CycleUtils
 import com.trae.expensetracker.ui.MoneyFormat
+import com.trae.expensetracker.ui.SplitCalculator
+import com.trae.expensetracker.ui.TransactionInsights
 import com.trae.expensetracker.ui.theme.Bad
 import com.trae.expensetracker.ui.theme.BadBg
 import com.trae.expensetracker.ui.theme.Border
@@ -61,6 +66,7 @@ import com.trae.expensetracker.ui.theme.PrimaryContainer
 import com.trae.expensetracker.ui.theme.Surface
 import com.trae.expensetracker.ui.theme.Surface2
 import com.trae.expensetracker.ui.theme.TextSecondary
+import com.trae.expensetracker.ui.theme.Warn
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -74,17 +80,21 @@ fun DashboardScreen(container: AppContainer) {
     var isRefreshing by remember { mutableStateOf(false) }
     val now = LocalDate.now()
     val cycleStartDay by container.settingsRepository.budgetCycleStartDay().collectAsState(initial = 1)
-    val (cycleStart, cycleEnd) = remember(now, cycleStartDay) { computeCycleRange(now, cycleStartDay) }
+    val (cycleStart, cycleEnd) = remember(now, cycleStartDay) { CycleUtils.cycleRange(now, cycleStartDay) }
     val from = cycleStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     val to = cycleEnd.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1
 
     val sources by container.dataSourceRepository.observeEnabled().collectAsState(initial = emptyList())
     val txs by container.transactionRepository.observeBetween(from, to).collectAsState(initial = emptyList())
 
-    val outgoing = txs.filter { it.direction == TransactionDirection.OUT }
-    val incoming = txs.filter { it.direction == TransactionDirection.IN }
+    // Internal transfers and flagged duplicates are stored but excluded from totals.
+    val outgoing = TransactionInsights.countableOutgoing(txs)
+    val incoming = TransactionInsights.countableIncoming(txs)
     val spentTotalMinor = outgoing.sumOf { it.amountMinor }
     val incomeTotalMinor = incoming.sumOf { it.amountMinor }
+    val internalTransfers = TransactionInsights.internalTransferGroups(txs)
+    val duplicateCount = TransactionInsights.flaggedDuplicates(txs).size
+    val sourceNameById = sources.associate { it.id to it.name }
 
     // Breakdown by sourceId (dynamic).
     val spentBySource = outgoing.groupBy { it.sourceId }.mapValues { (_, list) -> list.sumOf { it.amountMinor } }
@@ -95,15 +105,38 @@ fun DashboardScreen(container: AppContainer) {
         s.id to (inc - out)
     }
 
-    val categoryTotals = outgoing.groupBy { CategoryRules.detect(it) }
-        .mapValues { (_, list) -> list.sumOf { it.amountMinor } }
-        .toList()
-        .sortedByDescending { it.second }
-    val recentTxs = txs.sortedWith(compareByDescending<com.trae.expensetracker.data.model.TransactionEntity> { it.timestampMillis }.thenByDescending { it.id }).take(5)
+    val splits by container.transactionSplitRepository.observeAll().collectAsState(initial = emptyList())
+    val splitsByTx = remember(splits) { splits.groupBy { it.transactionId } }
+    // Split-aware: a transaction split across categories appears under each of them.
+    val categoryTotals = remember(outgoing, splitsByTx) {
+        SplitCalculator.totalsByCategory(outgoing, splitsByTx) { CategoryRules.detect(it) }
+            .toList()
+            .sortedByDescending { it.second }
+    }
+    // Duplicates are hidden here; internal transfers are shown but labelled.
+    val recentTxs = txs
+        .filter { it.duplicateOfId == null }
+        .sortedWith(compareByDescending<com.trae.expensetracker.data.model.TransactionEntity> { it.timestampMillis }.thenByDescending { it.id })
+        .take(5)
     val netMinor = incomeTotalMinor - spentTotalMinor
     val totalFlow = (incomeTotalMinor + spentTotalMinor).coerceAtLeast(1L)
     val spendRatio = (spentTotalMinor.toFloat() / totalFlow.toFloat()).coerceIn(0f, 1f)
-    val daysLeft = (cycleEnd.toEpochDay() - now.toEpochDay()).toInt().coerceAtLeast(0)
+    val daysLeft = CycleUtils.daysLeft(now, cycleEnd)
+
+    val budgets by container.budgetRepository.observeAll().collectAsState(initial = emptyList())
+    // Balances need full history, not just the current cycle.
+    val allHistory by container.transactionRepository.observeBetween(0L, Long.MAX_VALUE)
+        .collectAsState(initial = emptyList())
+    val balances = remember(allHistory, sources) {
+        BalanceEngine.balances(sources, allHistory)
+    }
+    val budgetProgress = remember(budgets, outgoing) {
+        BudgetEngine.progress(
+            budgets = budgets,
+            spending = outgoing,
+            categoryOf = { CategoryRules.detect(it) },
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -203,6 +236,137 @@ fun DashboardScreen(container: AppContainer) {
             }
         }
 
+        if (balances.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Surface),
+                border = BorderStroke(1.dp, Border)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Balances", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Opening balance plus every transaction. Set a starting balance in Settings to make these accurate.",
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    balances.take(5).forEach { b ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(b.sourceName, fontWeight = FontWeight.SemiBold)
+                                if (b.isPartial) {
+                                    Text(
+                                        "No opening balance set",
+                                        color = Warn,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                            Text(
+                                (if (b.balanceMinor < 0) "- " else "") + MoneyFormat.format(b.currency, abs(b.balanceMinor)),
+                                fontWeight = FontWeight.Bold,
+                                color = if (b.balanceMinor < 0) Bad else Good
+                            )
+                        }
+                        HorizontalDivider(color = Border)
+                    }
+                }
+            }
+        }
+
+        if (budgetProgress.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Surface),
+                border = BorderStroke(1.dp, Border)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Budgets", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    budgetProgress.take(4).forEach { p ->
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(p.categoryName, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    "${MoneyFormat.format(p.budget.currency, p.spentMinor)} / ${MoneyFormat.format(p.budget.currency, p.limitMinor)}",
+                                    color = TextSecondary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            LinearProgressIndicator(
+                                progress = { p.fraction.coerceIn(0.0, 1.0).toFloat() },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp),
+                                color = when {
+                                    p.isOverBudget -> Bad
+                                    p.isWarning -> Warn
+                                    else -> Primary
+                                },
+                                trackColor = Surface2,
+                            )
+                            Text(
+                                when {
+                                    p.isOverBudget -> "Over by ${MoneyFormat.format(p.budget.currency, p.spentMinor - p.limitMinor)}"
+                                    else -> "${MoneyFormat.format(p.budget.currency, p.remainingMinor)} left"
+                                },
+                                color = if (p.isOverBudget) Bad else TextSecondary,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (internalTransfers.isNotEmpty() || duplicateCount > 0) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Surface),
+                border = BorderStroke(1.dp, Border)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Transfers & Duplicates", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Excluded from Spent and Income so totals are not double counted.",
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    internalTransfers.take(3).forEach { transfer ->
+                        val from = transfer.fromSourceId?.let { sourceNameById[it] } ?: "Account"
+                        val to = transfer.toSourceId?.let { sourceNameById[it] } ?: "Account"
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("$from → $to", fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    Instant.ofEpochMilli(transfer.timestampMillis)
+                                        .atZone(ZoneId.systemDefault()).toLocalDate().toFriendlyUi(),
+                                    color = TextSecondary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            Text(
+                                MoneyFormat.format(transfer.currency, transfer.amountMinor),
+                                fontWeight = FontWeight.Bold,
+                                color = TextSecondary
+                            )
+                        }
+                        HorizontalDivider(color = Border)
+                    }
+                    if (duplicateCount > 0) {
+                        Text(
+                            "$duplicateCount possible duplicate${if (duplicateCount == 1) "" else "s"} flagged in Review.",
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Net by Source", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             Button(
@@ -287,11 +451,17 @@ fun DashboardScreen(container: AppContainer) {
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                        Text(
-                            (if (t.direction == TransactionDirection.IN) "+" else "-") + MoneyFormat.format(t.currency, t.amountMinor),
-                            fontWeight = FontWeight.Bold,
-                            color = if (t.direction == TransactionDirection.IN) Good else Bad
-                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                (if (t.direction == TransactionDirection.IN) "+" else "-") + MoneyFormat.format(t.currency, t.amountMinor),
+                                fontWeight = FontWeight.Bold,
+                                color = if (t.transferGroupId != null) TextSecondary
+                                else if (t.direction == TransactionDirection.IN) Good else Bad
+                            )
+                            if (t.transferGroupId != null) {
+                                Text("Transfer", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            }
+                        }
                     }
                     HorizontalDivider(color = Border)
                 }
@@ -404,11 +574,3 @@ private fun sourceIconForName(name: String): ImageVector = when {
 }
 
 private fun LocalDate.toFriendlyUi(): String = format(java.time.format.DateTimeFormatter.ofPattern("dd MMM"))
-
-private fun computeCycleRange(today: LocalDate, startDay: Int): Pair<LocalDate, LocalDate> {
-    val safeStart = startDay.coerceIn(1, 28)
-    val candidateStartThisMonth = today.withDayOfMonth(safeStart)
-    val start = if (today.dayOfMonth >= safeStart) candidateStartThisMonth else candidateStartThisMonth.minusMonths(1)
-    val end = start.plusMonths(1).minusDays(1)
-    return start to end
-}

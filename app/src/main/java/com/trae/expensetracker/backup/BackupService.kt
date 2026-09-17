@@ -3,9 +3,13 @@ package com.trae.expensetracker.backup
 import android.content.Context
 import android.net.Uri
 import com.trae.expensetracker.data.db.AppDatabase
+import com.trae.expensetracker.data.model.BudgetEntity
 import com.trae.expensetracker.data.model.CategoryEntity
 import com.trae.expensetracker.data.model.DataSourceEntity
+import com.trae.expensetracker.data.model.IgnoredImportEntity
+import com.trae.expensetracker.data.model.MerchantRuleEntity
 import com.trae.expensetracker.data.model.TransactionEntity
+import com.trae.expensetracker.data.model.TransactionSplitEntity
 import com.trae.expensetracker.data.repo.SettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -31,6 +35,10 @@ class BackupService(
             transactions = db.transactionDao().getAll(),
             categories = db.categoryDao().getAll(),
             sources = db.dataSourceDao().getAll(),
+            merchantRules = db.merchantRuleDao().getAll(),
+            budgets = db.budgetDao().getAll(),
+            splits = db.transactionSplitDao().getAll(),
+            ignoredImports = db.ignoredImportDao().getAll(),
             settings = settingsRepository.snapshot(),
         )
         val file = backupFile()
@@ -53,10 +61,26 @@ class BackupService(
             transactions = db.transactionDao().getAll(),
             categories = db.categoryDao().getAll(),
             sources = db.dataSourceDao().getAll(),
+            merchantRules = db.merchantRuleDao().getAll(),
+            budgets = db.budgetDao().getAll(),
+            splits = db.transactionSplitDao().getAll(),
+            ignoredImports = db.ignoredImportDao().getAll(),
             settings = settingsRepository.snapshot(),
         )
         appContext.contentResolver.openOutputStream(uri)?.use { out ->
             out.write(json.encodeToString(BackupSnapshot.serializer(), snapshot).toByteArray())
+            out.flush()
+        } ?: return@withContext false
+        true
+    }
+
+    /** Writes transactions as CSV so they can be opened in a spreadsheet. */
+    suspend fun exportCsvToUri(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        val transactions = db.transactionDao().getAll()
+        val sourceNames = db.dataSourceDao().getAll().associate { it.id to it.name }
+        val csv = CsvExporter.build(transactions, sourceNames)
+        appContext.contentResolver.openOutputStream(uri)?.use { out ->
+            out.write(csv.toByteArray())
             out.flush()
         } ?: return@withContext false
         true
@@ -76,6 +100,10 @@ class BackupService(
         db.dataSourceDao().insertAllReplace(snapshot.sources)
         db.categoryDao().insertAllReplace(snapshot.categories)
         db.transactionDao().insertAllReplace(snapshot.transactions)
+        db.merchantRuleDao().insertAllReplace(snapshot.merchantRules)
+        db.budgetDao().insertAllReplace(snapshot.budgets)
+        db.transactionSplitDao().insertAll(snapshot.splits)
+        db.ignoredImportDao().insertAllReplace(snapshot.ignoredImports)
         settingsRepository.restore(snapshot.settings)
     }
 
@@ -93,4 +121,12 @@ data class BackupSnapshot(
     val categories: List<CategoryEntity>,
     val sources: List<DataSourceEntity>,
     val settings: com.trae.expensetracker.data.repo.SettingsSnapshot,
+    /** Tier 1 addition. Defaulted so older backup files still restore cleanly. */
+    val merchantRules: List<MerchantRuleEntity> = emptyList(),
+    /** Tier 2 addition. Defaulted so older backup files still restore cleanly. */
+    val budgets: List<BudgetEntity> = emptyList(),
+    /** Tier 3 addition. Defaulted so older backup files still restore cleanly. */
+    val splits: List<TransactionSplitEntity> = emptyList(),
+    /** Deleted-message tombstones. Defaulted so older backup files still restore cleanly. */
+    val ignoredImports: List<IgnoredImportEntity> = emptyList(),
 )

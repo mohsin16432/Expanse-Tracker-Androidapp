@@ -11,23 +11,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.trae.expensetracker.data.AppContainer
 import com.trae.expensetracker.data.model.DataSourceType
@@ -54,15 +65,21 @@ import kotlin.math.abs
 @Composable
 fun CardsScreen(container: AppContainer) {
     val cutoffDay by container.settingsRepository.statementCutoffDay().collectAsState(initial = 10)
+    val cardCutoffs by container.settingsRepository.cardStatementCutoffs().collectAsState(initial = emptyMap())
     val sources by container.dataSourceRepository.observeAll().collectAsState(initial = emptyList())
 
-    val cardSources = sources.filter { it.type == DataSourceType.CREDIT_CARD }.associateBy { it.id }
+    val cardSourceList = sources.filter { it.type == DataSourceType.CREDIT_CARD }
+    val cardSources = cardSourceList.associateBy { it.id }
+    var selectedCardMenuOpen by remember { mutableStateOf(false) }
+    var selectedCardId by remember(cardSourceList.map { it.id }) { mutableStateOf<String?>(null) }
+    val selectedCard = cardSourceList.firstOrNull { it.id == selectedCardId } ?: cardSourceList.firstOrNull()
     val today = LocalDate.now()
     val zone = ZoneId.systemDefault()
+    val effectiveCutoffDay = selectedCard?.let { cardCutoffs[it.id] ?: cutoffDay } ?: cutoffDay
 
     // Compute current statement cycle [start, end] based on cutoff day.
     val cycleStart = run {
-        val day = cutoffDay.coerceIn(1, 28)
+        val day = effectiveCutoffDay.coerceIn(1, 28)
         val thisMonthCutoff = today.withDayOfMonth(day)
         if (today.isBefore(thisMonthCutoff)) thisMonthCutoff.minusMonths(1) else thisMonthCutoff
     }
@@ -72,7 +89,12 @@ fun CardsScreen(container: AppContainer) {
 
     val txs by container.transactionRepository.observeBetween(from, to).collectAsState(initial = emptyList())
     val cardTxs = txs
-        .filter { cardSources.containsKey(it.sourceId) }
+        .filter { tx ->
+            when {
+                selectedCard != null -> tx.sourceId == selectedCard.id
+                else -> cardSources.containsKey(tx.sourceId)
+            }
+        }
         .sortedWith(compareByDescending<com.trae.expensetracker.data.model.TransactionEntity> { it.timestampMillis }.thenByDescending { it.id })
     val outTotal = cardTxs.filter { it.direction == TransactionDirection.OUT }.sumOf { it.amountMinor }
     val inTotal = cardTxs.filter { it.direction == TransactionDirection.IN }.sumOf { it.amountMinor }
@@ -81,7 +103,68 @@ fun CardsScreen(container: AppContainer) {
     val groupedCardTxs = cardTxs.groupBy { Instant.ofEpochMilli(it.timestampMillis).atZone(zone).toLocalDate() }.toList()
 
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Cards", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(PrimaryContainer, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("C", color = Primary, fontWeight = FontWeight.Bold)
+                }
+                Text("Cards", style = MaterialTheme.typography.headlineLarge, color = Primary, fontWeight = FontWeight.Bold)
+            }
+
+            // Card picker (right side)
+            if (cardSourceList.isNotEmpty()) {
+                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+                    val chipLabel = selectedCard?.let { formatCardLabel(it.name, it.cardLast4) } ?: "All cards"
+                    AssistChip(
+                        onClick = { if (cardSourceList.size > 1) selectedCardMenuOpen = true },
+                        label = {
+                            Text(
+                                chipLabel,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        trailingIcon = {
+                            if (cardSourceList.size > 1) {
+                                Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = "Select card", tint = TextSecondary)
+                            }
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = Surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        border = BorderStroke(1.dp, Border)
+                    )
+                    DropdownMenu(
+                        expanded = selectedCardMenuOpen,
+                        onDismissRequest = { selectedCardMenuOpen = false },
+                        offset = DpOffset(x = 0.dp, y = 6.dp),
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .padding(0.dp)
+                    ) {
+                        cardSourceList.forEach { source ->
+                            DropdownMenuItem(
+                                text = { Text(formatCardLabel(source.name, source.cardLast4)) },
+                                onClick = {
+                                    selectedCardId = source.id
+                                    selectedCardMenuOpen = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         Card(
             colors = CardDefaults.cardColors(containerColor = Surface),
@@ -95,6 +178,11 @@ fun CardsScreen(container: AppContainer) {
                 ) {
                     Column {
                         Text("CURRENT CYCLE SPEND", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                        Text(
+                            selectedCard?.let { formatCardLabel(it.name, it.cardLast4) } ?: "All credit cards",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             CycleInfoCell(label = "Start", value = cycleStart.toFriendlyUi())
                             Text("→", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
@@ -106,7 +194,12 @@ fun CardsScreen(container: AppContainer) {
                             .background(PrimaryContainer, CircleShape)
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
-                        Text("${cardSources.size} Cards", color = Primary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        Text(
+                            if (selectedCard != null) "Cutoff $effectiveCutoffDay" else "${cardSources.size} Cards",
+                            color = Primary,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
                 HorizontalDivider(color = Border)
@@ -303,3 +396,6 @@ private fun LocalDate.formatHeader(): String {
 }
 
 private fun LocalDate.toFriendlyUi(): String = format(DateTimeFormatter.ofPattern("dd MMM"))
+
+private fun formatCardLabel(name: String, last4: String?): String =
+    if (last4.isNullOrBlank()) name else "$name • $last4"

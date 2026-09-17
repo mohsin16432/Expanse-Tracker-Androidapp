@@ -31,11 +31,47 @@ Poe docs: https://creator.poe.com/docs/external-applications/openai-compatible-a
 - Core data models + DAO + repositories
 - SMS receiver + bank parsers (HBL / FBL / JazzCash)
 - LLM fallback client (chat completions)
-- UI screens: Dashboard, Transactions (with Today/This month + search), Cards (statement cycle), Review (pending items), Settings (sources + LLM + backup placeholders)
+- UI screens: Dashboard, Transactions (filters + search), Reports (charts), Cards (statement cycle), Review (pending items), Settings (sources, budgets, categories, LLM, backup)
 
-## Next build steps
-1. Finish “Review” actions: confirm/discard, create new source, create new parser rule.
-2. Add receipt scan flow (camera + OCR) and optional LLM receipt parsing.
-3. Implement Google Drive backup/restore end-to-end (sign-in + encryption + upload/download).
-4. Add category management UI and auto-categorization rules UI.
+## Accuracy features
+- **Internal transfers** between your own accounts are detected and excluded from Spent and
+  Income so a HBL -> Meezan Raast move is not counted twice.
+- **Duplicates** captured from both SMS and a push notification are flagged and excluded.
+- **Refunds** reduce spending instead of inflating income.
+- **Learned merchant rules** remember corrected names and categories and reapply them on import.
+
+## Reports
+- Category donut for the current cycle, top merchants, and a 6-month spend/income trend.
+- Budget progress with per-category limits, plus over/warning states.
+- **Subscriptions**: recurring charges are detected automatically from history
+  (same merchant, steady amount, regular interval) and shown with a monthly equivalent.
+
+## Budgets
+Set a limit per category (or an overall limit) in Settings. Limits follow your budget cycle
+start day. A local notification fires once when spending crosses 80% and again if it goes over.
+
+## Security & data portability
+- **App lock**: optionally require the device screen lock (PIN, pattern, password or biometric)
+  before the app opens. Uses the platform keyguard, so no biometric permission is needed.
+  If the device has no screen lock configured the feature stays off rather than locking you out.
+- **CSV export**: export all transactions as a spreadsheet-ready CSV (Settings -> Backup & restore).
+  Includes a column explaining why a row is excluded from totals (transfer, duplicate or refund).
+
+## Balances
+Record an opening balance per account in Settings -> Account balances. The Dashboard then shows a
+running balance for each source. Internal transfers move both balances even though they are
+excluded from spend/income.
+
+## Split transactions
+A single payment can be divided across categories. Category totals, reports and budgets all
+respect splits, so a 10,000 grocery run split across Food and Household counts in both.
+
+## Automatic backup
+Enable "Daily automatic backup" in Settings to have the app save a backup to the device once a
+day via WorkManager, so data survives a lost phone even if you never tap Export.
+
+## Running the tests
+```bash
+./gradlew :app:testDebugUnitTest
+```
 

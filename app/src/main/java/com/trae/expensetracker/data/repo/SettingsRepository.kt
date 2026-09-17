@@ -2,8 +2,10 @@ package com.trae.expensetracker.data.repo
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.security.crypto.EncryptedSharedPreferences
@@ -25,12 +27,19 @@ class SettingsRepository(
 ) {
     private val KEY_BASE_CURRENCY = stringPreferencesKey("base_currency")
     private val KEY_STATEMENT_CUTOFF_DAY = intPreferencesKey("statement_cutoff_day")
+    private val KEY_CARD_STATEMENT_CUTOFFS = stringPreferencesKey("card_statement_cutoffs")
     private val KEY_BUDGET_CYCLE_START_DAY = intPreferencesKey("budget_cycle_start_day")
     private val KEY_LLM_BASE_URL = stringPreferencesKey("llm_base_url")
     private val KEY_LLM_MODEL = stringPreferencesKey("llm_model")
     private val KEY_APPROVED_SMS_FORMATS = stringPreferencesKey("approved_sms_formats")
     private val KEY_USER_SMS_REGEX_FORMATS = stringPreferencesKey("user_sms_regex_formats")
     private val KEY_REJECTED_SMS_FORMATS = stringPreferencesKey("rejected_sms_formats")
+    private val KEY_NOTIFICATION_ALLOWED_PACKAGES = stringPreferencesKey("notification_allowed_packages")
+    private val KEY_NOTIFICATION_DEBUG_LOGS = stringPreferencesKey("notification_debug_logs")
+    private val KEY_BUDGET_ALERTS_SENT = stringPreferencesKey("budget_alerts_sent")
+    private val KEY_APP_LOCK_ENABLED = booleanPreferencesKey("app_lock_enabled")
+    private val KEY_AUTO_BACKUP_ENABLED = booleanPreferencesKey("auto_backup_enabled")
+    private val KEY_LAST_BACKUP_AT = longPreferencesKey("last_backup_at")
     private val json = Json { ignoreUnknownKeys = true }
 
     private val securePrefs by lazy {
@@ -52,6 +61,27 @@ class SettingsRepository(
 
     fun statementCutoffDay(): Flow<Int> = context.dataStore.data.map { it[KEY_STATEMENT_CUTOFF_DAY] ?: 10 }
     suspend fun setStatementCutoffDay(value: Int) = context.dataStore.edit { it[KEY_STATEMENT_CUTOFF_DAY] = value }
+    fun cardStatementCutoffs(): Flow<Map<String, Int>> = context.dataStore.data.map { prefs ->
+        prefs.decodeCardStatementCutoffs()
+    }
+    fun cardStatementCutoffDay(sourceId: String): Flow<Int> = context.dataStore.data.map { prefs ->
+        prefs.decodeCardStatementCutoffs()[sourceId] ?: prefs[KEY_STATEMENT_CUTOFF_DAY] ?: 10
+    }
+    suspend fun getCardStatementCutoffs(): Map<String, Int> = context.dataStore.data.first().decodeCardStatementCutoffs()
+    suspend fun setCardStatementCutoffDay(sourceId: String, value: Int) {
+        context.dataStore.edit { prefs ->
+            val current = prefs.decodeCardStatementCutoffs().toMutableMap()
+            current[sourceId] = value.coerceIn(1, 28)
+            prefs[KEY_CARD_STATEMENT_CUTOFFS] = json.encodeToString(current)
+        }
+    }
+    suspend fun clearCardStatementCutoffDay(sourceId: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs.decodeCardStatementCutoffs().toMutableMap()
+            current.remove(sourceId)
+            prefs[KEY_CARD_STATEMENT_CUTOFFS] = json.encodeToString(current)
+        }
+    }
 
     fun budgetCycleStartDay(): Flow<Int> = context.dataStore.data.map { it[KEY_BUDGET_CYCLE_START_DAY] ?: 1 }
     suspend fun setBudgetCycleStartDay(value: Int) = context.dataStore.edit { it[KEY_BUDGET_CYCLE_START_DAY] = value }
@@ -99,6 +129,74 @@ class SettingsRepository(
         }
     }
 
+    fun notificationAllowedPackages(): Flow<List<String>> = context.dataStore.data.map { prefs ->
+        prefs.decodeNotificationAllowedPackages()
+    }
+    suspend fun getNotificationAllowedPackages(): List<String> = context.dataStore.data.first().decodeNotificationAllowedPackages()
+    suspend fun setNotificationAllowedPackages(value: List<String>) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_NOTIFICATION_ALLOWED_PACKAGES] = json.encodeToString(value.distinct())
+        }
+    }
+
+    fun notificationDebugLogs(): Flow<List<NotificationDebugLog>> = context.dataStore.data.map { prefs ->
+        prefs.decodeNotificationDebugLogs()
+    }
+    suspend fun getNotificationDebugLogs(): List<NotificationDebugLog> = context.dataStore.data.first().decodeNotificationDebugLogs()
+    suspend fun addNotificationDebugLog(value: NotificationDebugLog) {
+        context.dataStore.edit { prefs ->
+            val current = prefs.decodeNotificationDebugLogs()
+            prefs[KEY_NOTIFICATION_DEBUG_LOGS] = json.encodeToString((listOf(value) + current).take(60))
+        }
+    }
+    suspend fun clearNotificationDebugLogs() {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_NOTIFICATION_DEBUG_LOGS] = json.encodeToString(emptyList<NotificationDebugLog>())
+        }
+    }
+
+    /** Budget alert keys already fired for the current cycle. */
+    fun budgetAlertsSent(): Flow<Set<String>> = context.dataStore.data.map { prefs ->
+        val raw = prefs[KEY_BUDGET_ALERTS_SENT].orEmpty()
+        if (raw.isBlank()) emptySet()
+        else runCatching { json.decodeFromString<List<String>>(raw) }.getOrDefault(emptyList()).toSet()
+    }
+
+    suspend fun getBudgetAlertsSent(): Set<String> = budgetAlertsSent().first()
+
+    suspend fun markBudgetAlertsSent(keys: Collection<String>) {
+        if (keys.isEmpty()) return
+        context.dataStore.edit { prefs ->
+            val raw = prefs[KEY_BUDGET_ALERTS_SENT].orEmpty()
+            val existing = if (raw.isBlank()) emptyList()
+            else runCatching { json.decodeFromString<List<String>>(raw) }.getOrDefault(emptyList())
+            prefs[KEY_BUDGET_ALERTS_SENT] = json.encodeToString((existing + keys).distinct())
+        }
+    }
+
+    suspend fun clearBudgetAlerts() {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_BUDGET_ALERTS_SENT] = json.encodeToString(emptyList<String>())
+        }
+    }
+
+    // ---- App lock ----
+    fun appLockEnabled(): Flow<Boolean> = context.dataStore.data.map { it[KEY_APP_LOCK_ENABLED] ?: false }
+    suspend fun setAppLockEnabled(value: Boolean) {
+        context.dataStore.edit { it[KEY_APP_LOCK_ENABLED] = value }
+    }
+
+    // ---- Automatic backup ----
+    fun autoBackupEnabled(): Flow<Boolean> = context.dataStore.data.map { it[KEY_AUTO_BACKUP_ENABLED] ?: false }
+    suspend fun setAutoBackupEnabled(value: Boolean) {
+        context.dataStore.edit { it[KEY_AUTO_BACKUP_ENABLED] = value }
+    }
+
+    fun lastBackupAt(): Flow<Long?> = context.dataStore.data.map { it[KEY_LAST_BACKUP_AT] }
+    suspend fun setLastBackupAt(millis: Long) {
+        context.dataStore.edit { it[KEY_LAST_BACKUP_AT] = millis }
+    }
+
     fun llmApiKey(): String? = securePrefs.getString("llm_api_key", null)
     fun setLlmApiKey(value: String) {
         securePrefs.edit().putString("llm_api_key", value).apply()
@@ -114,18 +212,24 @@ class SettingsRepository(
         approvedSmsFormats = getApprovedSmsFormats(),
         userSmsRegexFormats = getUserSmsRegexFormats(),
         rejectedSmsFormats = getRejectedSmsFormats(),
+        cardStatementCutoffs = getCardStatementCutoffs(),
+        appLockEnabled = appLockEnabled().first(),
+        autoBackupEnabled = autoBackupEnabled().first(),
     )
 
     suspend fun restore(snapshot: SettingsSnapshot) {
         setBaseCurrency(snapshot.baseCurrency)
         setStatementCutoffDay(snapshot.statementCutoffDay)
         setBudgetCycleStartDay(snapshot.budgetCycleStartDay)
+        setAppLockEnabled(snapshot.appLockEnabled)
+        setAutoBackupEnabled(snapshot.autoBackupEnabled)
         setLlmBaseUrl(snapshot.llmBaseUrl)
         setLlmModel(snapshot.llmModel)
         context.dataStore.edit { prefs ->
             prefs[KEY_APPROVED_SMS_FORMATS] = json.encodeToString(snapshot.approvedSmsFormats)
             prefs[KEY_USER_SMS_REGEX_FORMATS] = json.encodeToString(snapshot.userSmsRegexFormats)
             prefs[KEY_REJECTED_SMS_FORMATS] = json.encodeToString(snapshot.rejectedSmsFormats)
+            prefs[KEY_CARD_STATEMENT_CUTOFFS] = json.encodeToString(snapshot.cardStatementCutoffs)
         }
         snapshot.llmApiKey?.let { setLlmApiKey(it) }
     }
@@ -147,7 +251,35 @@ class SettingsRepository(
         if (raw.isBlank()) return emptyList()
         return runCatching { json.decodeFromString<List<RejectedSmsFormat>>(raw) }.getOrDefault(emptyList())
     }
+
+    private fun Preferences.decodeCardStatementCutoffs(): Map<String, Int> {
+        val raw = this[KEY_CARD_STATEMENT_CUTOFFS].orEmpty()
+        if (raw.isBlank()) return emptyMap()
+        return runCatching { json.decodeFromString<Map<String, Int>>(raw) }.getOrDefault(emptyMap())
+    }
+
+    private fun Preferences.decodeNotificationAllowedPackages(): List<String> {
+        val raw = this[KEY_NOTIFICATION_ALLOWED_PACKAGES].orEmpty()
+        if (raw.isBlank()) return emptyList()
+        return runCatching { json.decodeFromString<List<String>>(raw) }.getOrDefault(emptyList())
+    }
+
+    private fun Preferences.decodeNotificationDebugLogs(): List<NotificationDebugLog> {
+        val raw = this[KEY_NOTIFICATION_DEBUG_LOGS].orEmpty()
+        if (raw.isBlank()) return emptyList()
+        return runCatching { json.decodeFromString<List<NotificationDebugLog>>(raw) }.getOrDefault(emptyList())
+    }
 }
+
+@Serializable
+data class NotificationDebugLog(
+    val timestampMillis: Long,
+    val packageName: String,
+    val title: String,
+    val bodyPreview: String,
+    val status: String,
+    val detail: String? = null,
+)
 
 @Serializable
 data class SettingsSnapshot(
@@ -160,4 +292,7 @@ data class SettingsSnapshot(
     val approvedSmsFormats: List<ApprovedSmsFormat> = emptyList(),
     val userSmsRegexFormats: List<UserSmsRegexFormat> = emptyList(),
     val rejectedSmsFormats: List<RejectedSmsFormat> = emptyList(),
+    val cardStatementCutoffs: Map<String, Int> = emptyMap(),
+    val appLockEnabled: Boolean = false,
+    val autoBackupEnabled: Boolean = false,
 )

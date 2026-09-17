@@ -17,5 +17,11 @@ interface PendingImportDao {
 
     @Query("SELECT COUNT(*) FROM pending_imports WHERE status = 'NEEDS_REVIEW'")
     fun observeNeedsReviewCount(): Flow<Int>
+
+    @Query("DELETE FROM pending_imports WHERE id = :id")
+    suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM pending_imports")
+    suspend fun clearAll()
 }
 

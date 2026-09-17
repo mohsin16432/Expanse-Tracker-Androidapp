@@ -89,6 +89,38 @@ class HblParser : BankSmsParser {
             )
         }
 
+        // --- Dividend credited (often mentions Meezan Bank dividend but credited in HBL account) ---
+        // Example:
+        // "Payment of Interim cash dividend (D-45) of Meezan Bank of PKR 370 is credited in your account PK98... with HABIB BANK LIMITED."
+        val dividend = Regex(
+            "Payment of\\s+(.+?)\\s+cash dividend\\s*\\((D-\\d+)\\)\\s+of\\s+(.+?)\\s+of\\s+(PKR\\s*[0-9,]+(?:\\.[0-9]{1,2})?)\\s+is credited in your account\\s+([A-Za-z0-9Xx*]+)\\s+with\\s+HABIB BANK LIMITED",
+            RegexOption.IGNORE_CASE
+        ).find(body)
+        if (dividend != null) {
+            val kind = dividend.groupValues[1].trim()
+            val code = dividend.groupValues[2].trim()
+            val company = dividend.groupValues[3].trim()
+            val amountStr = dividend.groupValues[4].trim()
+
+            val (currency, minor) = ParseUtils.parseAmountMinor(amountStr) ?: return null
+            val externalId = ParseUtils.sha256Hex("$sender|$body")
+            return TransactionDraft(
+                sourceShortCode = "14250",
+                sourceNameHint = "HBL",
+                sourceTypeHint = DataSourceType.BANK,
+                timestampMillis = message.receivedAtMillis,
+                type = TransactionType.CREDIT_RECEIVED,
+                direction = TransactionDirection.IN,
+                amountMinor = kotlin.math.abs(minor),
+                currency = currency,
+                merchantRaw = "$company dividend $code ($kind)",
+                reference = code,
+                rawMessage = body,
+                externalId = externalId,
+                confidence = 0.88,
+            )
+        }
+
         // --- HBL account debited / funds transfer ---
         // Example: "Your HBL A/C 2290***12703 has been debited with PKR 100.00 on 17/06/2026 for ATM Funds Transfer."
         val debited = Regex(

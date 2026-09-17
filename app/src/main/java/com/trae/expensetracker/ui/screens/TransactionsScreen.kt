@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,7 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -62,12 +64,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.trae.expensetracker.data.AppContainer
 import com.trae.expensetracker.data.model.TransactionDirection
 import com.trae.expensetracker.data.model.TransactionEntity
 import com.trae.expensetracker.ui.CategoryRules
+import com.trae.expensetracker.ui.CycleUtils
 import com.trae.expensetracker.ui.MoneyFormat
+import com.trae.expensetracker.ui.TransactionInsights
 import com.trae.expensetracker.ui.theme.Bad
 import com.trae.expensetracker.ui.theme.BadBg
 import com.trae.expensetracker.ui.theme.Border
@@ -107,6 +112,14 @@ fun TransactionsScreen(container: AppContainer) {
     var toDate by remember { mutableStateOf<LocalDate?>(null) }
     var editingTx by remember { mutableStateOf<TransactionEntity?>(null) }
     var viewingTx by remember { mutableStateOf<TransactionEntity?>(null) }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var draftSelectedCategory by remember { mutableStateOf<String?>(null) }
+    var categoryMenuOpen by remember { mutableStateOf(false) }
+    var minAmountEdit by remember { mutableStateOf("") }
+    var maxAmountEdit by remember { mutableStateOf("") }
+    var appliedMinAmountMinor by remember { mutableStateOf<Long?>(null) }
+    var appliedMaxAmountMinor by remember { mutableStateOf<Long?>(null) }
+    var hideTransfersAndDuplicates by remember { mutableStateOf(true) }
 
     val sources by container.dataSourceRepository.observeAll().collectAsState(initial = emptyList())
     val categories by container.categoryRepository.observeAll().collectAsState(initial = emptyList())
@@ -115,7 +128,7 @@ fun TransactionsScreen(container: AppContainer) {
     val now = LocalDate.now()
     val presetRange = when (preset) {
         RangePreset.TODAY -> now to now
-        RangePreset.THIS_MONTH -> computeCycleRange(now, cycleStartDay)
+        RangePreset.THIS_MONTH -> CycleUtils.cycleRange(now, cycleStartDay)
     }
     val effectiveFrom = fromDate ?: presetRange.first
     val effectiveTo = toDate ?: presetRange.second
@@ -136,9 +149,14 @@ fun TransactionsScreen(container: AppContainer) {
         DirectionFilter.INCOME -> txs.filter { it.direction == TransactionDirection.IN }
     }
         .filter { selectedSourceId == null || it.sourceId == selectedSourceId }
+        .filter { selectedCategory == null || CategoryRules.detect(it).equals(selectedCategory, ignoreCase = true) }
+        .filter { appliedMinAmountMinor == null || it.amountMinor >= appliedMinAmountMinor!! }
+        .filter { appliedMaxAmountMinor == null || it.amountMinor <= appliedMaxAmountMinor!! }
+        .filter { !hideTransfersAndDuplicates || !TransactionInsights.isExcludedFromTotals(it) }
         .sortedWith(compareByDescending<TransactionEntity> { it.timestampMillis }.thenByDescending { it.id })
-    val spentTotal = filteredTxs.filter { it.direction == TransactionDirection.OUT }.sumOf { it.amountMinor }
-    val incomeTotal = filteredTxs.filter { it.direction == TransactionDirection.IN }.sumOf { it.amountMinor }
+    // Transfers and duplicates stay visible in the list but are excluded from the totals row.
+    val spentTotal = TransactionInsights.outgoingTotalMinor(filteredTxs)
+    val incomeTotal = TransactionInsights.incomingTotalMinor(filteredTxs)
     val sourceMap = sources.associateBy { it.id }
     val groupedTxs = filteredTxs
         .sortedByDescending { it.timestampMillis }
@@ -255,6 +273,20 @@ fun TransactionsScreen(container: AppContainer) {
                     fromDate = draftFromDate,
                     toDate = draftToDate,
                     selectedSourceId = draftSelectedSourceId,
+                    categoryOptions = categories.map { it.name },
+                    selectedCategory = draftSelectedCategory,
+                    onCategoryClick = { categoryMenuOpen = true },
+                    onCategorySelected = {
+                        draftSelectedCategory = it
+                        categoryMenuOpen = false
+                    },
+                    categoryMenuOpen = categoryMenuOpen,
+                    minAmountEdit = minAmountEdit,
+                    maxAmountEdit = maxAmountEdit,
+                    onMinAmountChange = { minAmountEdit = it },
+                    onMaxAmountChange = { maxAmountEdit = it },
+                    hideTransfersAndDuplicates = hideTransfersAndDuplicates,
+                    onToggleHideTransfers = { hideTransfersAndDuplicates = it },
                     onSourceClick = { sourceMenuOpen = true },
                     onSourceSelected = {
                         draftSelectedSourceId = it
@@ -269,7 +301,10 @@ fun TransactionsScreen(container: AppContainer) {
                         fromDate = draftFromDate
                         toDate = draftToDate
                         selectedSourceId = draftSelectedSourceId
-                        notify("Date filter applied.")
+                        selectedCategory = draftSelectedCategory
+                        appliedMinAmountMinor = minAmountEdit.toDoubleOrNull()?.let { (it * 100).toLong() }
+                        appliedMaxAmountMinor = maxAmountEdit.toDoubleOrNull()?.let { (it * 100).toLong() }
+                        notify("Filters applied.")
                     },
                     onClear = {
                         draftFromDate = null
@@ -278,8 +313,15 @@ fun TransactionsScreen(container: AppContainer) {
                         toDate = null
                         draftSelectedSourceId = null
                         selectedSourceId = null
+                        draftSelectedCategory = null
+                        selectedCategory = null
+                        minAmountEdit = ""
+                        maxAmountEdit = ""
+                        appliedMinAmountMinor = null
+                        appliedMaxAmountMinor = null
                         directionFilter = DirectionFilter.ALL
-                        notify("Date filter cleared.")
+                        hideTransfersAndDuplicates = true
+                        notify("Filters cleared.")
                     }
                 )
             }
@@ -392,8 +434,13 @@ fun TransactionsScreen(container: AppContainer) {
                 onSaved = { notify("Transaction updated.") },
                 onDeleted = {
                     scope.launch {
-                        container.transactionRepository.deleteById(tx.id)
-                        notify("Transaction deleted.")
+                        // Remember the deletion: the source SMS is still in the inbox and would
+                        // otherwise be re-imported on the next refresh.
+                        tx.rawMessage?.takeIf { it.isNotBlank() }?.let {
+                            container.ignoredImportRepository.ignore(it, reason = "deleted")
+                        }
+                        val removed = container.transactionRepository.deleteById(tx.id)
+                        notify(if (removed) "Transaction deleted. It will not come back on refresh." else "Already deleted.")
                         editingTx = null
                     }
                 },
@@ -440,6 +487,17 @@ private fun DateRangeFilterCard(
     fromDate: LocalDate?,
     toDate: LocalDate?,
     selectedSourceId: String?,
+    categoryOptions: List<String>,
+    selectedCategory: String?,
+    onCategoryClick: () -> Unit,
+    onCategorySelected: (String?) -> Unit,
+    categoryMenuOpen: Boolean,
+    minAmountEdit: String,
+    maxAmountEdit: String,
+    onMinAmountChange: (String) -> Unit,
+    onMaxAmountChange: (String) -> Unit,
+    hideTransfersAndDuplicates: Boolean,
+    onToggleHideTransfers: (Boolean) -> Unit,
     onSourceClick: () -> Unit,
     onSourceSelected: (String?) -> Unit,
     sourceMenuOpen: Boolean,
@@ -455,7 +513,7 @@ private fun DateRangeFilterCard(
         border = BorderStroke(1.dp, Border)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Date filter", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Filters", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -497,6 +555,50 @@ private fun DateRangeFilterCard(
                     )
                 }
             }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = hideTransfersAndDuplicates,
+                    onCheckedChange = onToggleHideTransfers
+                )
+                Text("Hide transfers, duplicates and refunds", color = TextSecondary)
+            }
+            OutlinedButton(
+                onClick = onCategoryClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(selectedCategory ?: "All categories")
+            }
+            DropdownMenu(expanded = categoryMenuOpen, onDismissRequest = { onCategorySelected(selectedCategory) }) {
+                DropdownMenuItem(
+                    text = { Text("All categories") },
+                    onClick = { onCategorySelected(null) }
+                )
+                categoryOptions.forEach { name ->
+                    DropdownMenuItem(
+                        text = { Text(name) },
+                        onClick = { onCategorySelected(name) }
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = minAmountEdit,
+                    onValueChange = { onMinAmountChange(it.filter { ch -> ch.isDigit() || ch == '.' }) },
+                    label = { Text("Min amount") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                OutlinedTextField(
+                    value = maxAmountEdit,
+                    onValueChange = { onMaxAmountChange(it.filter { ch -> ch.isDigit() || ch == '.' }) },
+                    label = { Text("Max amount") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
                     onClick = onPickFrom,
@@ -514,7 +616,7 @@ private fun DateRangeFilterCard(
                     onClick = onFind,
                     shape = RoundedCornerShape(8.dp)
                 ) { Text("Apply") }
-                TextButton(onClick = onClear) { Text("Clear custom dates", color = TextSecondary) }
+                TextButton(onClick = onClear) { Text("Clear all", color = TextSecondary) }
             }
         }
     }
@@ -640,12 +742,4 @@ private fun LocalDate.formatHeader(): String {
         yesterday -> "YESTERDAY, ${format(DateTimeFormatter.ofPattern("MMM d"))}".uppercase()
         else -> format(DateTimeFormatter.ofPattern("MMM d")).uppercase()
     }
-}
-
-private fun computeCycleRange(today: LocalDate, startDay: Int): Pair<LocalDate, LocalDate> {
-    val safeStart = startDay.coerceIn(1, 28)
-    val candidateStartThisMonth = today.withDayOfMonth(safeStart)
-    val start = if (today.dayOfMonth >= safeStart) candidateStartThisMonth else candidateStartThisMonth.minusMonths(1)
-    val end = start.plusMonths(1).minusDays(1)
-    return start to end
 }

@@ -20,6 +20,44 @@ class MeezanParser : BankSmsParser {
         val sender = message.sender.trim()
         if (!isMeezanSender(sender, body)) return null
 
+        // Example:
+        // "PKR 155,000.00 received from MOHSIN HBL-xxx2703 to A/C xxx9618 of F-8 MARKAZ BR ISD on 25-May-2026 at 12:21"
+        val receivedTransfer = Regex(
+            "(PKR\\s*[0-9,]+(?:\\.[0-9]{1,2})?).*?received\\s+from\\s+(.+?)\\s+to\\s+A/C\\s+([xX*0-9]+).*?\\s+on\\s+(\\d{1,2}-[A-Za-z]{3}-\\d{2,4})\\s+at\\s+(\\d{1,2}:\\d{2})",
+            RegexOption.IGNORE_CASE
+        ).find(body)
+        if (receivedTransfer != null) {
+            val amountStr = receivedTransfer.groupValues[1].trim()
+            val from = receivedTransfer.groupValues[2].trim()
+            val accountMasked = receivedTransfer.groupValues[3].trim()
+            val dateStr = receivedTransfer.groupValues[4].trim()
+            val timeStr = receivedTransfer.groupValues[5].trim()
+
+            val (currency, minor) = ParseUtils.parseAmountMinor(amountStr) ?: return null
+            val ts = ParseUtils.tryParseDateMillis(
+                text = "$dateStr $timeStr",
+                patterns = listOf("dd-MMM-yyyy HH:mm", "dd-MMM-yy HH:mm", "d-MMM-yyyy HH:mm"),
+                locale = Locale.US
+            ) ?: message.receivedAtMillis
+
+            val externalId = ParseUtils.sha256Hex("8079|$amountStr|$dateStr $timeStr|$from|$accountMasked")
+            return TransactionDraft(
+                sourceShortCode = "8079",
+                sourceNameHint = "Meezan Bank",
+                sourceTypeHint = DataSourceType.BANK,
+                timestampMillis = ts,
+                type = TransactionType.TRANSFER_IN,
+                direction = TransactionDirection.IN,
+                amountMinor = kotlin.math.abs(minor),
+                currency = currency,
+                merchantRaw = from,
+                reference = null,
+                rawMessage = body,
+                externalId = externalId,
+                confidence = 0.88,
+            )
+        }
+
         val m = Regex(
             "cheque#(\\d+).*?of\\s+PKR\\s*([0-9,]+(?:\\.[0-9]{1,2})?).*?inward clearing on\\s+(\\d{1,2}-\\d{1,2}-\\d{2})",
             RegexOption.IGNORE_CASE
@@ -38,8 +76,10 @@ class MeezanParser : BankSmsParser {
             sourceNameHint = "Meezan Bank",
             sourceTypeHint = DataSourceType.BANK,
             timestampMillis = ts,
-            type = TransactionType.TRANSFER_IN,
-            direction = TransactionDirection.IN,
+            // "cheque ... drawn on a/c ... received in inward clearing" indicates an issued cheque
+            // being presented for clearing (outflow from your account).
+            type = TransactionType.TRANSFER_OUT,
+            direction = TransactionDirection.OUT,
             amountMinor = kotlin.math.abs(minor),
             currency = currency,
             merchantRaw = "Cheque $chequeNo (Inward clearing)",
@@ -57,4 +97,3 @@ class MeezanParser : BankSmsParser {
         return b.contains("MEEZAN") && b.contains("(8079)")
     }
 }
-

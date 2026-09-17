@@ -36,10 +36,13 @@ object SmsClassifier {
         "payment",
         "transferred",
         "transfer",
+        "sent",
+        "paid",
         "received",
         "spent",
         "card",
         "account",
+        "wallet",
     )
 
     fun isOtpOrPromo(body: String): Boolean {
@@ -57,7 +60,12 @@ object SmsClassifier {
 
     fun looksLikeFinancialTransaction(body: String): Boolean {
         val s = body.lowercase()
-        val hasMoney = s.contains("pkr") || s.contains("rs.") || s.contains(" rs ") || Regex("""\b[0-9,]+\.[0-9]{2}\b""").containsMatchIn(s)
+        val hasMoney =
+            s.contains("pkr") ||
+                s.contains("rs.") ||
+                s.contains("rs ") ||
+                s.contains(" rs ") ||
+                Regex("""\b[0-9,]+(?:\.[0-9]{1,2})?\b""").containsMatchIn(s)
         val hasFinancialVerb = financialKeywords.any { s.contains(it) }
         return hasMoney && hasFinancialVerb && !isOtpOrPromo(body) && !isWithdrawal(body)
     }

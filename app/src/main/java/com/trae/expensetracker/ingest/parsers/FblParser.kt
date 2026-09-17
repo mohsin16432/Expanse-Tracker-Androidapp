@@ -11,12 +11,13 @@ class FblParser : BankSmsParser {
     override fun parse(message: SmsMessage): TransactionDraft? {
         val body = message.body.trim()
         val sender = message.sender.trim()
-        if (!isFblSender(sender)) return null
+        if (!isFblSender(sender, body)) return null
+        val sourceShortCode = inferSourceShortCode(sender)
 
         // Debit card purchase at Merchant
         // "PKR 6531.00 Debit Card purchase at Daraz, Karachi, * from FBL A/C *1333 on 16/JUN/2026 at 07:17:23 PM"
         val purchase = Regex(
-            "(PKR\\s*[0-9,]+(?:\\.[0-9]{1,2})?).*?Debit Card purchase at (.+?) from .*? on (.+?) at (.+?)$",
+            "(PKR\\s*[0-9,]+(?:\\.[0-9]{1,2})?).*?Debit Card purchase at\\s+(.+?)\\s+from\\s+FBL\\s+A/C\\s+.*?\\s+on\\s+(.+?)\\s+at\\s+(.+?)$",
             RegexOption.IGNORE_CASE
         ).find(body)
         if (purchase != null) {
@@ -34,7 +35,7 @@ class FblParser : BankSmsParser {
 
             val externalId = ParseUtils.sha256Hex("$sender|$body")
             return TransactionDraft(
-                sourceShortCode = "8756",
+                sourceShortCode = sourceShortCode,
                 sourceNameHint = "Faysal / FBL",
                 sourceTypeHint = DataSourceType.BANK,
                 timestampMillis = ts,
@@ -72,7 +73,7 @@ class FblParser : BankSmsParser {
 
             val externalId = ParseUtils.sha256Hex("$sender|$body")
             return TransactionDraft(
-                sourceShortCode = "8756",
+                sourceShortCode = sourceShortCode,
                 sourceNameHint = "Faysal / FBL",
                 sourceTypeHint = DataSourceType.BANK,
                 timestampMillis = ts,
@@ -108,7 +109,7 @@ class FblParser : BankSmsParser {
 
             val externalId = ParseUtils.sha256Hex("$sender|$body")
             return TransactionDraft(
-                sourceShortCode = "8756",
+                sourceShortCode = sourceShortCode,
                 sourceNameHint = "Faysal / FBL",
                 sourceTypeHint = DataSourceType.BANK,
                 timestampMillis = ts,
@@ -127,8 +128,16 @@ class FblParser : BankSmsParser {
         return null
     }
 
-    private fun isFblSender(sender: String): Boolean {
+    private fun isFblSender(sender: String, body: String): Boolean {
         val s = sender.trim().uppercase(Locale.US)
-        return s == "8756" || s.contains("8756") || s.contains("FBL") || s.contains("FAYSAL")
+        if (s == "8756" || s.contains("8756") || s.contains("FBL") || s.contains("FAYSAL")) return true
+
+        val b = body.uppercase(Locale.US)
+        return b.contains("FBL A/C") || b.contains("FAYSAL") || b.contains("DEBIT CARD PURCHASE")
+    }
+
+    private fun inferSourceShortCode(sender: String): String {
+        val digits = sender.filter { it.isDigit() }
+        return if (digits.length in 3..8) digits else "8756"
     }
 }

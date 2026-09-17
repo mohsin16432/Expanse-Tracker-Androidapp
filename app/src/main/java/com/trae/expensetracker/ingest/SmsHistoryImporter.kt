@@ -3,11 +3,13 @@ package com.trae.expensetracker.ingest
 import android.content.Context
 import android.provider.Telephony
 import com.trae.expensetracker.data.repo.TransactionRepository
+import com.trae.expensetracker.notify.BudgetAlertNotifier
 
 class SmsHistoryImporter(
     private val appContext: Context,
     private val smsIngestor: SmsIngestor,
     private val transactionRepository: TransactionRepository,
+    private val budgetAlertNotifier: BudgetAlertNotifier,
 ) {
     data class ImportResult(val scanned: Int, val saved: Int)
 
@@ -23,7 +25,7 @@ class SmsHistoryImporter(
 
     private suspend fun importRecentInternal(limit: Int): ImportResult {
         smsIngestor.invalidateUserFormatsCache()
-        transactionRepository.deleteImportedTransactions()
+        smsIngestor.invalidateMerchantRuleCache()
         val before = transactionRepository.countAll()
         var scanned = 0
         val resolver = appContext.contentResolver
@@ -53,6 +55,12 @@ class SmsHistoryImporter(
         }
         val after = transactionRepository.countAll()
         val saved = (after - before).toInt().coerceAtLeast(0)
+
+        // Re-evaluate budgets once after a bulk import rather than per message.
+        if (saved > 0) {
+            runCatching { budgetAlertNotifier.evaluateAndNotify(transactionRepository.getAll()) }
+        }
+
         return ImportResult(scanned = scanned, saved = saved)
     }
 }

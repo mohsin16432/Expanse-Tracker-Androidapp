@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.LocalMall
 import androidx.compose.material.icons.outlined.LocalTaxi
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Storefront
@@ -383,6 +384,11 @@ fun ManualExpenseScreen(
                     reference = null,
                     externalId = null,
                     rawMessage = receiptResult?.rawText,
+                    // Preserve classification flags when editing an existing row, otherwise the
+                    // transfer / duplicate / refund markers would be silently wiped.
+                    transferGroupId = existingTransaction?.transferGroupId,
+                    duplicateOfId = existingTransaction?.duplicateOfId,
+                    refundOfId = existingTransaction?.refundOfId,
                 )
                 scope.launch {
                     if (existingTransaction == null) {
@@ -496,6 +502,7 @@ private fun sourceIcon(type: DataSourceType): ImageVector = when (type) {
     DataSourceType.BANK -> Icons.Outlined.AccountBalance
     DataSourceType.WALLET -> Icons.Outlined.Payments
     DataSourceType.CREDIT_CARD -> Icons.Outlined.CreditCard
+    DataSourceType.NOTIFICATION -> Icons.Outlined.Notifications
 }
 
 private fun categoryIcon(category: String): ImageVector = when {

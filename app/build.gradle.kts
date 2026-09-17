@@ -46,6 +46,12 @@ android {
     }
 }
 
+ksp {
+    // Tell Room where to write its schema JSON. Without this Room cannot export the schema,
+    // which is what powers migration verification.
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))
@@ -64,6 +70,9 @@ dependencies {
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+
+    // Core (NotificationManagerCompat, etc.)
+    implementation("androidx.core:core-ktx:1.13.1")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")

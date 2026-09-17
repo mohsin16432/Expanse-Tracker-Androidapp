@@ -14,5 +14,11 @@ class DataSourceRepository(
     suspend fun findById(id: String): DataSourceEntity? = dao.findById(id)
     suspend fun deleteById(id: String) = dao.deleteById(id)
     suspend fun getAll(): List<DataSourceEntity> = dao.getAll()
+
+    /** Records the balance of an account at a point in time, enabling running balances. */
+    suspend fun setOpeningBalance(id: String, balanceMinor: Long?, atMillis: Long?) {
+        val existing = dao.findById(id) ?: return
+        dao.upsert(existing.copy(openingBalanceMinor = balanceMinor, openingBalanceMillis = atMillis))
+    }
     suspend fun replaceAll(items: List<DataSourceEntity>) = dao.insertAllReplace(items)
 }

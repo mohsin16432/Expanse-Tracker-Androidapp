@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.InsertChartOutlined
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,6 +48,7 @@ import com.trae.expensetracker.ExpenseTrackerApp
 import com.trae.expensetracker.ui.screens.CardsScreen
 import com.trae.expensetracker.ui.screens.DashboardScreen
 import com.trae.expensetracker.ui.screens.ManualExpenseScreen
+import com.trae.expensetracker.ui.screens.ReportsScreen
 import com.trae.expensetracker.ui.screens.ReviewScreen
 import com.trae.expensetracker.ui.screens.SettingsScreen
 import com.trae.expensetracker.ui.screens.TransactionsScreen
@@ -59,8 +61,9 @@ import com.trae.expensetracker.ui.theme.TextSecondary
 import com.trae.expensetracker.ui.theme.Border
 
 sealed class Dest(val route: String, val label: String, val icon: ImageVector? = null) {
-    data object Dashboard : Dest("dashboard", "Dashboard", Icons.Outlined.GridView)
-    data object Transactions : Dest("transactions", "Transactions", Icons.AutoMirrored.Outlined.ListAlt)
+    data object Dashboard : Dest("dashboard", "Home", Icons.Outlined.GridView)
+    data object Transactions : Dest("transactions", "Txns", Icons.AutoMirrored.Outlined.ListAlt)
+    data object Reports : Dest("reports", "Reports", Icons.Outlined.InsertChartOutlined)
     data object Cards : Dest("cards", "Cards", Icons.Outlined.CreditCard)
     data object Review : Dest("review", "Review", Icons.Outlined.Notifications)
     data object Settings : Dest("settings", "Settings", Icons.Outlined.Settings)
@@ -74,7 +77,14 @@ fun AppNav() {
     val container = (ctx.applicationContext as ExpenseTrackerApp).container
     var showManualSheet by remember { mutableStateOf(false) }
 
-    val items = listOf(Dest.Dashboard, Dest.Transactions, Dest.Cards, Dest.Review, Dest.Settings)
+    val items = listOf(
+        Dest.Dashboard,
+        Dest.Transactions,
+        Dest.Reports,
+        Dest.Cards,
+        Dest.Review,
+        Dest.Settings,
+    )
     val backStackEntry by nav.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val currentRoute = currentDestination?.route
@@ -85,7 +95,8 @@ fun AppNav() {
         floatingActionButton = {
             val showFab = currentRoute != Dest.Review.route &&
                 currentRoute != Dest.Settings.route &&
-                currentRoute != Dest.Transactions.route
+                currentRoute != Dest.Transactions.route &&
+                currentRoute != Dest.Reports.route
             if (showFab) {
                 FloatingActionButton(
                     containerColor = Primary,
@@ -156,6 +167,7 @@ fun AppNav() {
         ) {
             composable(Dest.Dashboard.route) { DashboardScreen(container) }
             composable(Dest.Transactions.route) { TransactionsScreen(container) }
+            composable(Dest.Reports.route) { ReportsScreen(container) }
             composable(Dest.Cards.route) { CardsScreen(container) }
             composable(Dest.Review.route) { ReviewScreen(container) }
             composable(Dest.Settings.route) { SettingsScreen(container) }

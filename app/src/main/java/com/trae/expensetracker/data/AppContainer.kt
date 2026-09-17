@@ -4,14 +4,21 @@ import android.content.Context
 import androidx.room.Room
 import com.trae.expensetracker.backup.BackupService
 import com.trae.expensetracker.data.db.AppDatabase
+import com.trae.expensetracker.data.repo.BudgetRepository
 import com.trae.expensetracker.data.repo.CategoryRepository
 import com.trae.expensetracker.data.repo.DataSourceRepository
+import com.trae.expensetracker.data.repo.IgnoredImportRepository
+import com.trae.expensetracker.data.repo.MerchantRuleRepository
 import com.trae.expensetracker.data.repo.PendingImportRepository
 import com.trae.expensetracker.data.repo.SettingsRepository
 import com.trae.expensetracker.data.repo.TransactionRepository
+import com.trae.expensetracker.data.repo.TransactionSplitRepository
 import com.trae.expensetracker.ingest.SmsHistoryImporter
+import com.trae.expensetracker.ingest.TransferPairer
 import com.trae.expensetracker.ingest.SmsIngestor
 import com.trae.expensetracker.llm.LlmClient
+import com.trae.expensetracker.notify.BudgetAlertNotifier
+import com.trae.expensetracker.security.AppLockManager
 import com.trae.expensetracker.llm.PoeOpenAiClient
 import com.trae.expensetracker.ocr.ReceiptOcrService
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +32,10 @@ class AppContainer(context: Context) {
         .addMigrations(
             AppDatabase.MIGRATION_1_2,
             AppDatabase.MIGRATION_2_3,
+            AppDatabase.MIGRATION_3_4,
+            AppDatabase.MIGRATION_4_5,
+            AppDatabase.MIGRATION_5_6,
+            AppDatabase.MIGRATION_6_7,
         )
         .build()
 
@@ -32,6 +43,10 @@ class AppContainer(context: Context) {
     val categoryRepository = CategoryRepository(db.categoryDao())
     val dataSourceRepository = DataSourceRepository(db.dataSourceDao())
     val pendingImportRepository = PendingImportRepository(db.pendingImportDao())
+    val merchantRuleRepository = MerchantRuleRepository(db.merchantRuleDao())
+    val ignoredImportRepository = IgnoredImportRepository(db.ignoredImportDao())
+    val budgetRepository = BudgetRepository(db.budgetDao())
+    val transactionSplitRepository = TransactionSplitRepository(db.transactionSplitDao())
     val settingsRepository = SettingsRepository(appContext)
 
     val llmClient: LlmClient = PoeOpenAiClient(
@@ -46,13 +61,24 @@ class AppContainer(context: Context) {
         dataSourceRepository = dataSourceRepository,
         categoryRepository = categoryRepository,
         settingsRepository = settingsRepository,
+        merchantRuleRepository = merchantRuleRepository,
+        ignoredImportRepository = ignoredImportRepository,
         llmClient = llmClient,
+    )
+
+    val transferPairer = TransferPairer(transactionRepository)
+
+    val budgetAlertNotifier = BudgetAlertNotifier(
+        appContext = appContext,
+        budgetRepository = budgetRepository,
+        settingsRepository = settingsRepository,
     )
 
     val smsHistoryImporter = SmsHistoryImporter(
         appContext = appContext,
         smsIngestor = smsIngestor,
         transactionRepository = transactionRepository,
+        budgetAlertNotifier = budgetAlertNotifier,
     )
 
     val backupService = BackupService(
@@ -62,6 +88,8 @@ class AppContainer(context: Context) {
     )
 
     val receiptOcrService = ReceiptOcrService(appContext)
+
+    val appLockManager = AppLockManager(appContext)
 
     init {
         // Seed a small default category set so category pickers are usable.

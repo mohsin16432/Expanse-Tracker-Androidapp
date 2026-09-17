@@ -6,6 +6,18 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- Needed so Settings can show installed bank/wallet apps for notification capture. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <queries>
+        <!-- Common Pakistan bank/wallet apps. These make app discovery more reliable on Android 11+. -->
+        <package android:name="pk.com.telenor.easypaisa" />
+        <package android:name="com.nayapay.app" />
+        <package android:name="com.techlogix.mobilinkcustomer" />
+        <package android:name="com.meezan.mb" />
+        <package android:name="com.hbl.android.hblmobilebanking" />
+        <package android:name="com.faysalbank" />
+    </queries>
 
     <application
         android:name=".ExpenseTrackerApp"
@@ -35,6 +47,16 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
+        <!-- Notification listener (user must enable Notification Access in Settings) -->
+        <service
+            android:name=".ingest.NotificationCaptureService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"
