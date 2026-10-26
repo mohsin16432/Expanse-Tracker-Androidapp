@@ -42,12 +42,17 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -112,6 +117,7 @@ fun TransactionsScreen(container: AppContainer) {
     var toDate by remember { mutableStateOf<LocalDate?>(null) }
     var editingTx by remember { mutableStateOf<TransactionEntity?>(null) }
     var viewingTx by remember { mutableStateOf<TransactionEntity?>(null) }
+    var pendingDeleteTx by remember { mutableStateOf<TransactionEntity?>(null) }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var draftSelectedCategory by remember { mutableStateOf<String?>(null) }
     var categoryMenuOpen by remember { mutableStateOf(false) }
@@ -398,17 +404,35 @@ fun TransactionsScreen(container: AppContainer) {
                     ) {
                         Column {
                             itemsForDate.forEachIndexed { index, t ->
-                                TransactionRow(
-                                    tx = t,
-                                    sourceLabel = sourceMap[t.sourceId]?.name ?: t.sourceId,
-                                    onEdit = {
-                                        if (t.externalId != null && !t.rawMessage.isNullOrBlank()) {
-                                            viewingTx = t
-                                        } else {
-                                            editingTx = t
-                                        }
+                                val isDuplicate = t.duplicateOfId != null
+                                if (isDuplicate) {
+                                    @OptIn(ExperimentalMaterial3Api::class)
+                                    SwipeToDismissBox(
+                                        state = rememberSwipeToDismissBoxState(
+                                            confirmValueChange = { v ->
+                                                if (v == SwipeToDismissBoxValue.EndToStart) { pendingDeleteTx = t; false } else false
+                                            }
+                                        ),
+                                        backgroundContent = {
+                                            Box(Modifier.fillMaxWidth().background(Bad).padding(16.dp), contentAlignment = androidx.compose.ui.Alignment.CenterEnd) {
+                                                Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = androidx.compose.ui.graphics.Color.White)
+                                            }
+                                        },
+                                        enableDismissFromStartToEnd = false,
+                                    ) {
+                                        TransactionRow(
+                                            tx = t,
+                                            sourceLabel = sourceMap[t.sourceId]?.name ?: t.sourceId,
+                                            onEdit = { if (t.externalId != null && !t.rawMessage.isNullOrBlank()) viewingTx = t else editingTx = t }
+                                        )
                                     }
-                                )
+                                } else {
+                                    TransactionRow(
+                                        tx = t,
+                                        sourceLabel = sourceMap[t.sourceId]?.name ?: t.sourceId,
+                                        onEdit = { if (t.externalId != null && !t.rawMessage.isNullOrBlank()) viewingTx = t else editingTx = t }
+                                    )
+                                }
                                 if (index != itemsForDate.lastIndex) {
                                     HorizontalDivider(color = Border)
                                 }
@@ -447,6 +471,23 @@ fun TransactionsScreen(container: AppContainer) {
                 onDone = { editingTx = null }
             )
         }
+    }
+
+    pendingDeleteTx?.let { tx ->
+        AlertDialog(
+            onDismissRequest = { pendingDeleteTx = null },
+            title = { Text("Delete duplicate?") },
+            text = { Text("Delete ${tx.merchantRaw} · ${MoneyFormat.format(tx.currency, tx.amountMinor)}? This will not re-import on refresh.") },
+            confirmButton = { TextButton(onClick = {
+                val toDelete = tx; pendingDeleteTx = null
+                scope.launch {
+                    toDelete.rawMessage?.takeIf { it.isNotBlank() }?.let { container.ignoredImportRepository.ignore(it, reason = "deleted") }
+                    val removed = container.transactionRepository.deleteById(toDelete.id)
+                    notify(if (removed) "Deleted." else "Already deleted.")
+                }
+            }) { Text("Delete") } },
+            dismissButton = { TextButton(onClick = { pendingDeleteTx = null }) { Text("Cancel") } }
+        )
     }
 
     viewingTx?.let { tx ->

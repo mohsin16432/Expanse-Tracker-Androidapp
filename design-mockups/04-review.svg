@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" font-family="Inter,Roboto,system-ui,sans-serif">
+  <rect width="390" height="844" rx="44" fill="#05070D"/><rect x="8" y="8" width="374" height="828" rx="38" fill="#0B1120"/>
+  <text x="28" y="40" fill="#E8EDF6" font-size="14" font-weight="600">9:41</text>
+  <circle cx="322" cy="34" r="3" fill="#E8EDF6"/><circle cx="334" cy="34" r="3" fill="#E8EDF6"/><rect x="344" y="29" width="18" height="10" rx="2" fill="none" stroke="#E8EDF6"/><rect x="346" y="31" width="12" height="6" rx="1" fill="#E8EDF6"/>
+  <text x="24" y="78" fill="#E8EDF6" font-size="22" font-weight="800">Review</text>
+  <rect x="300" y="62" width="66" height="28" rx="14" fill="#F59E0B" opacity="0.18"/><text x="333" y="81" fill="#FBBF24" font-size="12" font-weight="700" text-anchor="middle">3 pending</text>
+  <!-- info banner -->
+  <rect x="16" y="100" width="358" height="48" rx="14" fill="#3B82F6" opacity="0.12" stroke="#2563EB" stroke-opacity="0.4"/>
+  <text x="32" y="120" fill="#7FB0FF" font-size="13" font-weight="600">AI suggested these from SMS</text>
+  <text x="32" y="138" fill="#8A95AD" font-size="11">Confirm to add to your transactions</text>
+  <!-- review cards -->
+  <g font-size="13">
+    <rect x="16" y="160" width="358" height="96" rx="16" fill="#151C2E" stroke="#2A3650"/>
+    <rect x="16" y="160" width="5" height="96" rx="2.5" fill="#F59E0B"/>
+    <text x="32" y="186" fill="#E8EDF6" font-weight="700" font-size="14">Unknown merchant</text>
+    <text x="32" y="206" fill="#8A95AD" font-size="11">SMS from 8552 &#183; 25 Oct, 14:02</text>
+    <text x="32" y="232" fill="#F87171" font-weight="700">Rs 850</text>
+    <rect x="248" y="200" width="56" height="30" rx="15" fill="#1E293B" stroke="#22C55E" stroke-opacity="0.5"/><text x="276" y="220" fill="#34D399" font-size="12" font-weight="600" text-anchor="middle">Approve</text>
+    <rect x="312" y="200" width="50" height="30" rx="15" fill="#1E293B" stroke="#475569"/><text x="337" y="220" fill="#8A95AD" font-size="12" text-anchor="middle">Edit</text>
+    <rect x="16" y="268" width="358" height="96" rx="16" fill="#151C2E" stroke="#2A3650"/>
+    <rect x="16" y="268" width="5" height="96" rx="2.5" fill="#F59E0B"/>
+    <text x="32" y="294" fill="#E8EDF6" font-weight="700" font-size="14">ATM Withdrawal</text>
+    <text x="32" y="314" fill="#8A95AD" font-size="11">HBL **1234 &#183; 25 Oct, 09:30</text>
+    <text x="32" y="340" fill="#F87171" font-weight="700">Rs 5,000</text>
+    <rect x="248" y="308" width="56" height="30" rx="15" fill="#1E293B" stroke="#22C55E" stroke-opacity="0.5"/><text x="276" y="328" fill="#34D399" font-size="12" font-weight="600" text-anchor="middle">Approve</text>
+    <rect x="312" y="308" width="50" height="30" rx="15" fill="#1E293B" stroke="#475569"/><text x="337" y="328" fill="#8A95AD" font-size="12" text-anchor="middle">Edit</text>
+    <rect x="16" y="376" width="358" height="96" rx="16" fill="#151C2E" stroke="#2A3650"/>
+    <rect x="16" y="376" width="5" height="96" rx="2.5" fill="#3B82F6"/>
+    <text x="32" y="402" fill="#E8EDF6" font-weight="700" font-size="14">JazzCash transfer</text>
+    <text x="32" y="422" fill="#8A95AD" font-size="11">LLM draft 90% sure &#183; 24 Oct</text>
+    <text x="32" y="448" fill="#A78BFA" font-weight="700">Rs 1,200</text>
+    <rect x="248" y="416" width="56" height="30" rx="15" fill="#1E293B" stroke="#22C55E" stroke-opacity="0.5"/><text x="276" y="436" fill="#34D399" font-size="12" font-weight="600" text-anchor="middle">Approve</text>
+    <rect x="312" y="416" width="50" height="30" rx="15" fill="#1E293B" stroke="#475569"/><text x="337" y="436" fill="#8A95AD" font-size="12" text-anchor="middle">Edit</text>
+  </g>
+  <text x="24" y="508" fill="#8A95AD" font-size="12" font-weight="600">Already confirmed</text>
+  <g font-size="13">
+    <rect x="16" y="520" width="358" height="56" rx="14" fill="#0F1626" stroke="#1B2438"/>
+    <text x="32" y="540" fill="#E8EDF6" font-weight="600">Daraz</text><text x="32" y="560" fill="#8A95AD" font-size="11">Shopping &#183; confirmed</text>
+    <text x="358" y="548" fill="#8A95AD" text-anchor="end">&#10003; Auto-categorised</text>
+  </g>
+  <rect x="16" y="788" width="358" height="62" rx="31" fill="#111827" stroke="#222C42"/>
+  <g font-size="10" text-anchor="middle">
+    <text x="58" y="816" fill="#8A95AD" font-size="16">&#8962;</text><text x="58" y="838" fill="#8A95AD">Home</text>
+    <text x="130" y="816" fill="#8A95AD" font-size="16">&#9776;</text><text x="130" y="838" fill="#8A95AD">Txns</text>
+    <text x="285" y="816" fill="#8A95AD" font-size="16">&#128202;</text><text x="285" y="838" fill="#8A95AD">Reports</text>
+    <circle cx="338" cy="812" r="9" fill="#3B82F6"/><text x="338" y="838" fill="#3B82F6" font-weight="600">Review</text>
+  </g>
+</svg>

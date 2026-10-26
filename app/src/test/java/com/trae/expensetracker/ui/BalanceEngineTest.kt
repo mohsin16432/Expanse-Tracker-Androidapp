@@ -128,4 +128,19 @@ class BalanceEngineTest {
         assertEquals("BIG", balances[0].sourceId)
         assertEquals("SMALL", balances[1].sourceId)
     }
+
+    @Test fun atmWithdrawalAffectsBalance() {
+        // Just asserts that an ATM_WITHDRAWAL row counts as OUT in balance — wiring check.
+        val tx: com.trae.expensetracker.data.model.TransactionEntity = com.trae.expensetracker.data.model.TransactionEntity(
+            id = "w1", timestampMillis = 1L, sourceId = "14250-BANK",
+            type = com.trae.expensetracker.data.model.TransactionType.ATM_WITHDRAWAL,
+            direction = com.trae.expensetracker.data.model.TransactionDirection.OUT,
+            amountMinor = 100000L, currency = "PKR",
+            merchantRaw = "ATM", merchantNormalized = "atm",
+            categoryId = null, reference = null, externalId = "w1", rawMessage = "atm withdrawal"
+        )
+        val src = com.trae.expensetracker.data.model.DataSourceEntity(id="14250-BANK", name="HBL", shortCode="14250", type=com.trae.expensetracker.data.model.DataSourceType.BANK, openingBalanceMinor=500000L, openingBalanceMillis=0L)
+        val bal = com.trae.expensetracker.ui.BalanceEngine.balanceFor(src, listOf(tx))
+        assertEquals(400000L, bal.balanceMinor)
+    }
 }

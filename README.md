@@ -11,10 +11,7 @@ Premium dark-first personal finance app that imports transactional SMS, supports
 This project uses `READ_SMS` + `RECEIVE_SMS` for personal use.
 
 ## Withdrawal handling
-ATM cash withdrawal SMS are **excluded completely**:
-- not parsed
-- not stored
-- not shown anywhere
+ATM cash withdrawal SMS are parsed as `ATM_WITHDRAWAL` and counted as spending (category: Cash, merchant: ATM). They affect balances and budgets like any other OUT transaction.
 
 ## LLM fallback (OpenAI-compatible)
 Unknown/new SMS formats can be sent to an OpenAI-compatible endpoint for best-effort classification + parsing.

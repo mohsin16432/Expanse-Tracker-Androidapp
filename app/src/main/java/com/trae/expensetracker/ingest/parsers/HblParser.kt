@@ -13,8 +13,43 @@ class HblParser : BankSmsParser {
         val sender = message.sender.trim()
         if (!isHblSender(sender)) return null
 
-        // Exclude withdrawals early (but keep a safety check here too).
-        if (body.lowercase().contains("cash withdrawal")) return null
+        // ATM cash withdrawal — parse as spend (was previously excluded).
+        if (body.lowercase().contains("cash withdrawal") || body.lowercase().contains("atm withdrawal")) {
+            // HBL variants seen: "has been debited with PKR 10,000.00 on 11/Jun/2026 for ATM Cash Withdrawal"
+            // and "withdrawn from ATM ..." — pull amount + date, rest goes to merchant "ATM".
+            // Pull the amount from the "debited with <amount> on <date>" clause so account
+            // numbers earlier in the SMS are not mistaken for the amount.
+            val clause = Regex(
+                """(?:debited|withdrawn)\s+(?:with|for|from)\s+(?:PKR|Rs\.?|RS\.?|USD)?\s*([0-9,]+(?:\.[0-9]{1,2})?)""",
+                RegexOption.IGNORE_CASE
+            ).find(body)?.groupValues?.getOrNull(1)
+            val amt = clause?.let { ParseUtils.parseAmountMinor("PKR $it") } ?: ParseUtils.parseAmountMinor(body)
+            if (amt != null) {
+                val (currency, minor) = amt
+                val ts = Regex("""on\s+([0-9/\-A-Za-z ]{6,20})\s+for""", RegexOption.IGNORE_CASE).find(body)
+                    ?.let { it.groupValues[1].trim() }
+                    ?.let { raw ->
+                        ParseUtils.tryParseDateMillis(raw, listOf("dd/MMM/yyyy","dd/MM/yyyy","dd-MMM-yy","dd-MMM-yyyy","d/M/yyyy","dd/MM/yy","d/M/yy"), java.util.Locale.US)
+                    } ?: message.receivedAtMillis
+                val ref = Regex("""Ref(?:erence)?\s*[:#]?\s*([A-Za-z0-9\-_/]+)""", RegexOption.IGNORE_CASE).find(body)?.groupValues?.getOrNull(1)?.trim()?.takeIf { it.isNotBlank() }
+                val externalId = ParseUtils.sha256Hex("$sender|$body")
+                return TransactionDraft(
+                    sourceShortCode = "14250",
+                    sourceNameHint = "HBL",
+                    sourceTypeHint = DataSourceType.BANK,
+                    timestampMillis = ts,
+                    type = TransactionType.ATM_WITHDRAWAL,
+                    direction = TransactionDirection.OUT,
+                    amountMinor = kotlin.math.abs(minor),
+                    currency = currency,
+                    merchantRaw = "ATM",
+                    reference = ref,
+                    rawMessage = body,
+                    externalId = externalId,
+                    confidence = 0.9,
+                )
+            }
+        }
 
         // --- HBL Credit Card charge ---
         // Example: "Dear Customer, Your HBL CreditCard (ending with 9529) has been charged at FOOD PANDA for PKR-1,405.99 on 11/Jun/2026."

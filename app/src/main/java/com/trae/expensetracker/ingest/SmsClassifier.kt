@@ -50,9 +50,7 @@ object SmsClassifier {
         return otpKeywords.any { s.contains(it) } || promoKeywords.any { s.contains(it) }
     }
 
-    /**
-     * Requirement: withdrawal messages must NOT be parsed, stored, or shown anywhere.
-     */
+    /** Withdrawals are stored as ATM_WITHDRAWAL and counted as spending. */
     fun isWithdrawal(body: String): Boolean {
         val s = body.lowercase()
         return withdrawalKeywords.any { s.contains(it) }
@@ -67,6 +65,6 @@ object SmsClassifier {
                 s.contains(" rs ") ||
                 Regex("""\b[0-9,]+(?:\.[0-9]{1,2})?\b""").containsMatchIn(s)
         val hasFinancialVerb = financialKeywords.any { s.contains(it) }
-        return hasMoney && hasFinancialVerb && !isOtpOrPromo(body) && !isWithdrawal(body)
+        return hasMoney && hasFinancialVerb && !isOtpOrPromo(body)
     }
 }

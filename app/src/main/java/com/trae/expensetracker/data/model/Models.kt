@@ -16,6 +16,7 @@ enum class TransactionType {
     CARD_CHARGE,
     CARD_PAYMENT,
     BILL_PAYMENT,
+    ATM_WITHDRAWAL,
     ADJUSTMENT,
 }
 

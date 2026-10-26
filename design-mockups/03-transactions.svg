@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" font-family="Inter,Roboto,system-ui,sans-serif">
+  <rect width="390" height="844" rx="44" fill="#05070D"/><rect x="8" y="8" width="374" height="828" rx="38" fill="#0B1120"/>
+  <text x="28" y="40" fill="#E8EDF6" font-size="14" font-weight="600">9:41</text>
+  <circle cx="322" cy="34" r="3" fill="#E8EDF6"/><circle cx="334" cy="34" r="3" fill="#E8EDF6"/><rect x="344" y="29" width="18" height="10" rx="2" fill="none" stroke="#E8EDF6"/><rect x="346" y="31" width="12" height="6" rx="1" fill="#E8EDF6"/>
+  <text x="24" y="78" fill="#E8EDF6" font-size="22" font-weight="800">Transactions</text>
+  <rect x="24" y="96" width="342" height="46" rx="23" fill="#151C2E" stroke="#222C42"/>
+  <circle cx="48" cy="119" r="8" fill="none" stroke="#8A95AD" stroke-width="2"/><line x1="54" y1="125" x2="60" y2="131" stroke="#8A95AD" stroke-width="2"/>
+  <text x="72" y="124" fill="#8A95AD" font-size="13">Search merchant or date</text>
+  <g font-size="12">
+    <rect x="24" y="156" width="92" height="34" rx="17" fill="#3B82F6"/><text x="70" y="178" fill="#fff" font-weight="600" text-anchor="middle">All</text>
+    <rect x="124" y="156" width="104" height="34" rx="17" fill="#151C2E" stroke="#222C42"/><text x="176" y="178" fill="#C7D0E0" text-anchor="middle">Spending</text>
+    <rect x="236" y="156" width="92" height="34" rx="17" fill="#151C2E" stroke="#222C42"/><text x="282" y="178" fill="#C7D0E0" text-anchor="middle">Income</text>
+    <rect x="336" y="156" width="30" height="34" rx="10" fill="#151C2E" stroke="#222C42"/><text x="351" y="178" fill="#8A95AD" font-size="15" text-anchor="middle">&#9881;</text>
+  </g>
+  <!-- day group: Today -->
+  <g>
+    <rect x="16" y="202" width="358" height="30" rx="8" fill="#0F1626"/>
+    <text x="24" y="222" fill="#E8EDF6" font-size="13" font-weight="700">Today &#183; 26 Oct</text>
+    <text x="358" y="222" fill="#8A95AD" font-size="11" text-anchor="end">spent Rs 1,720 &#183; in Rs 0</text>
+  </g>
+  <g font-size="13">
+    <rect x="16" y="238" width="358" height="60" rx="16" fill="#151C2E" stroke="#222C42"/>
+    <circle cx="46" cy="268" r="16" fill="#1E293B"/><text x="46" y="273" fill="#3B82F6" font-size="14" text-anchor="middle" font-weight="700">F</text>
+    <text x="72" y="263" fill="#E8EDF6" font-weight="600">Foodpanda</text><text x="72" y="281" fill="#8A95AD" font-size="11">Food &#183; JazzCash</text>
+    <text x="358" y="269" fill="#F87171" font-weight="700" text-anchor="end">-Rs 1,240</text>
+    <rect x="16" y="304" width="358" height="60" rx="16" fill="#151C2E" stroke="#222C42"/>
+    <circle cx="46" cy="334" r="16" fill="#1E293B"/><text x="46" y="339" fill="#F59E0B" font-size="13" text-anchor="middle" font-weight="700">&#9988;</text>
+    <text x="72" y="329" fill="#E8EDF6" font-weight="600">Careem ride</text><text x="72" y="347" fill="#8A95AD" font-size="11">Transport &#183; HBL</text>
+    <text x="358" y="335" fill="#F87171" font-weight="700" text-anchor="end">-Rs 480</text>
+  </g>
+  <!-- day group: Yesterday -->
+  <g>
+    <rect x="16" y="380" width="358" height="30" rx="8" fill="#0F1626"/>
+    <text x="24" y="400" fill="#E8EDF6" font-size="13" font-weight="700">Yesterday &#183; 25 Oct</text>
+    <text x="358" y="400" fill="#8A95AD" font-size="11" text-anchor="end">spent Rs 3,890 &#183; in Rs 205,000</text>
+  </g>
+  <g font-size="13">
+    <rect x="16" y="416" width="358" height="60" rx="16" fill="#151C2E" stroke="#222C42"/>
+    <circle cx="46" cy="446" r="16" fill="#1E293B"/><text x="46" y="451" fill="#34D399" font-size="14" text-anchor="middle" font-weight="700">&#8593;</text>
+    <text x="72" y="441" fill="#E8EDF6" font-weight="600">Salary credited</text><text x="72" y="459" fill="#8A95AD" font-size="11">Income &#183; HBL</text>
+    <text x="358" y="447" fill="#34D399" font-weight="700" text-anchor="end">+Rs 180,000</text>
+    <rect x="16" y="482" width="358" height="60" rx="16" fill="#151C2E" stroke="#222C42"/>
+    <circle cx="46" cy="512" r="16" fill="#1E293B"/><text x="46" y="517" fill="#A78BFA" font-size="13" text-anchor="middle" font-weight="700">&#8644;</text>
+    <text x="72" y="507" fill="#E8EDF6" font-weight="600">HBL &#8594; Meezan</text><text x="72" y="525" fill="#8A95AD" font-size="11">Transfer &#183; own account</text>
+    <text x="358" y="513" fill="#A78BFA" font-weight="700" text-anchor="end">Rs 25,000</text>
+    <rect x="16" y="548" width="358" height="60" rx="16" fill="#151C2E" stroke="#222C42"/>
+    <circle cx="46" cy="578" r="16" fill="#1E293B"/><text x="46" y="583" fill="#3B82F6" font-size="14" text-anchor="middle" font-weight="700">S</text>
+    <text x="72" y="573" fill="#E8EDF6" font-weight="600">Shopee</text><text x="72" y="591" fill="#8A95AD" font-size="11">Shopping &#183; Card **4291</text>
+    <text x="358" y="579" fill="#F87171" font-weight="700" text-anchor="end">-Rs 3,890</text>
+  </g>
+  <rect x="16" y="788" width="358" height="62" rx="31" fill="#111827" stroke="#222C42"/>
+  <g font-size="10" text-anchor="middle">
+    <text x="58" y="816" fill="#8A95AD" font-size="16">&#8962;</text><text x="58" y="838" fill="#8A95AD">Home</text>
+    <circle cx="130" cy="812" r="9" fill="#3B82F6"/><text x="130" y="838" fill="#3B82F6" font-weight="600">Txns</text>
+    <text x="285" y="816" fill="#8A95AD" font-size="16">&#128202;</text><text x="285" y="838" fill="#8A95AD">Reports</text>
+    <text x="338" y="816" fill="#8A95AD" font-size="16">&#128179;</text><text x="338" y="838" fill="#8A95AD">Cards</text>
+  </g>
+  <circle cx="195" cy="786" r="27" fill="#3B82F6"/><path d="M195 774 v24 M183 786 h24" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+</svg>

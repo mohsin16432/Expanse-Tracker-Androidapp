@@ -40,8 +40,8 @@ class PoeOpenAiClient(
 
     override suspend fun classifyAndParseSms(message: SmsMessage): LlmSmsResult = withContext(Dispatchers.IO) {
         try {
-        // Quick local reject before spending LLM calls.
-        if (SmsClassifier.isWithdrawal(message.body) || SmsClassifier.isOtpOrPromo(message.body)) {
+        // Quick local reject before spending LLM calls (OTP/promo only — withdrawals are transactions).
+        if (SmsClassifier.isOtpOrPromo(message.body)) {
             return@withContext LlmSmsResult(false, null, rawModelOutput = "local_drop")
         }
 
@@ -56,7 +56,7 @@ class PoeOpenAiClient(
 You are a strict SMS transaction classifier and parser.
 Rules:
 1) OTP and promotional messages are NOT transactions.
-2) Cash withdrawal SMS (ATM cash withdrawal) must be treated as NOT a transaction and must be excluded.
+2) Cash withdrawal SMS (ATM cash withdrawal) ARE transactions — classify as ATM_WITHDRAWAL, direction OUT, merchant "ATM".
 3) If it is transactional, extract a normalized TransactionDraft.
 Output JSON only. No extra text.
 """.trimIndent()
@@ -77,7 +77,7 @@ Return JSON with this shape:
     "sourceTypeHint": "BANK|WALLET|CREDIT_CARD or null",
     "cardLast4Hint": "string or null",
     "timestampMillis": 0,
-    "type": "DEBIT_PURCHASE|CREDIT_RECEIVED|TRANSFER_OUT|TRANSFER_IN|CARD_CHARGE|CARD_PAYMENT|BILL_PAYMENT|ADJUSTMENT",
+    "type": "DEBIT_PURCHASE|CREDIT_RECEIVED|TRANSFER_OUT|TRANSFER_IN|CARD_CHARGE|CARD_PAYMENT|BILL_PAYMENT|ATM_WITHDRAWAL|ADJUSTMENT",
     "direction": "OUT|IN",
     "amountMinor": 0,
     "currency": "PKR|USD|...",

@@ -6,9 +6,18 @@ import com.trae.expensetracker.data.model.TransactionType
 import com.trae.expensetracker.ingest.SmsMessage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class GenericBankParserTest {
+    // This shape (no Raast keyword) goes to LLM/Review — proves any format lands somewhere.
+    @Test
+    fun unknownMoneySmsIsNotParsedByGenericButIsFinancial() {
+        val body = "PKR 2,500 debited from your account 1234 on 01/06/2026 for payment at STORE X"
+        assertNull(GenericBankParser.parse(SmsMessage(sender = "9999", body = body, receivedAtMillis = 0L)))
+        assertEquals(true, com.trae.expensetracker.ingest.SmsClassifier.looksLikeFinancialTransaction(body))
+    }
+
     @Test
     fun parsesIncomingRaastTransferWithoutBankSpecificFormat() {
         val draft = GenericBankParser.parse(

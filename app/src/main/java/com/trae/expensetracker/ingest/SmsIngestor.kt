@@ -68,8 +68,6 @@ class SmsIngestor(
         // The user deleted this message in a previous run; do not bring it back.
         if (ignoredImportRepository.isIgnored(body)) return IngestResult("ignored_user_deleted")
 
-        // HARD RULE: withdrawals are excluded entirely.
-        if (SmsClassifier.isWithdrawal(body)) return IngestResult("ignored_withdrawal")
         if (SmsClassifier.isOtpOrPromo(body)) return IngestResult("ignored_otp_promo")
 
         // 0) User-defined regex formats (local parsing)
@@ -93,8 +91,25 @@ class SmsIngestor(
         if (matchesRejected(message)) return IngestResult("rejected_cached")
 
         // 2) LLM fallback for unknown format / new bank messages
-        // Disabled for bulk import to keep refresh fast.
-        if (!allowLlmFallback) return IngestResult("ignored_llm_disabled")
+        // Bulk import (allowLlmFallback=false) routes unknown formats to Review instead
+        // of silently dropping them — universal coverage lives here.
+        if (!allowLlmFallback) {
+            if (SmsClassifier.looksLikeFinancialTransaction(body)) {
+                val pendingId = ParseUtils.sha256Hex("pending|${message.sender}|${message.body}|${message.receivedAtMillis}")
+                pendingImportRepository.upsert(
+                    PendingImportEntity(
+                        id = pendingId,
+                        createdAtMillis = System.currentTimeMillis(),
+                        kind = "sms",
+                        sender = message.sender,
+                        rawText = message.body,
+                        draftTransactionJson = null,
+                    )
+                )
+                return IngestResult("pending_review")
+            }
+            return IngestResult("ignored_llm_disabled")
+        }
 
         // Per-sender throttle to control LLM cost/rate-limit.
         val now = System.currentTimeMillis()
