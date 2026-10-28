@@ -375,8 +375,15 @@ fun TransactionsScreen(container: AppContainer) {
             }
         } else {
             groupedTxs.forEach { (date, itemsForDate) ->
-                val dayNet = itemsForDate.sumOf { if (it.direction == TransactionDirection.IN) it.amountMinor else -it.amountMinor }
+                // Day-wise totals: spend (OUT) and income (IN) are shown separately,
+                // internal transfers stay neutral and do not count into either.
                 val dayCurrency = itemsForDate.firstOrNull()?.currency ?: "PKR"
+                val daySpent = itemsForDate
+                    .filter { it.direction == TransactionDirection.OUT && it.transferGroupId == null }
+                    .sumOf { it.amountMinor }
+                val dayIncome = itemsForDate
+                    .filter { it.direction == TransactionDirection.IN && it.transferGroupId == null }
+                    .sumOf { it.amountMinor }
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -390,9 +397,10 @@ fun TransactionsScreen(container: AppContainer) {
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            (if (dayNet >= 0) "+" else "-") + MoneyFormat.format(dayCurrency, kotlin.math.abs(dayNet)),
+                            "spent ${MoneyFormat.format(dayCurrency, daySpent)}" +
+                                if (dayIncome > 0L) " · in ${MoneyFormat.format(dayCurrency, dayIncome)}" else "",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (dayNet >= 0) Good else Bad,
+                            color = if (dayIncome > 0L) Good else Bad,
                             fontWeight = FontWeight.Bold
                         )
                     }

@@ -56,14 +56,14 @@ import java.util.Locale
 
 /** Palette for category slices. Cycles if there are more categories than colours. */
 private val slicePalette = listOf(
-    Color(0xFF2D5DA1),
-    Color(0xFF6B5DFF),
-    Color(0xFF39D8AB),
-    Color(0xFFF4C063),
-    Color(0xFFFF6A7C),
-    Color(0xFF8D7BFF),
-    Color(0xFF4FB3D9),
-    Color(0xFF95A0BD),
+    Color(0xFF60A5FA),
+    Color(0xFFA78BFA),
+    Color(0xFF34D399),
+    Color(0xFFFBBF24),
+    Color(0xFFF87171),
+    Color(0xFF22D3EE),
+    Color(0xFFF472B6),
+    Color(0xFF94A3B8),
 )
 
 @Composable
