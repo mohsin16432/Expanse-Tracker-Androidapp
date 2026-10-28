@@ -2,27 +2,29 @@ package com.trae.expensetracker.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Primary = Color(0xFF2D5DA1)
-val PrimaryContainer = Color(0xFFDCE8FF)
-val Secondary = Color(0xFF5F6F8F)
-val SecondaryContainer = Color(0xFFE8EEF8)
+// Dark-first finance palette. Trust blue is the primary, profit green the reward,
+// red the warning, purple reserved for internal transfers.
+val Primary = Color(0xFF3B82F6)
+val PrimaryContainer = Color(0xFF1E3A8A)
+val Secondary = Color(0xFF8A95AD)
+val SecondaryContainer = Color(0xFF1B2438)
 
-val Bg = Color(0xFFF9F9FF)
-val Surface = Color(0xFFFFFFFF)
-val Surface2 = Color(0xFFF3F3F9)
-val SurfaceDim = Color(0xFFD9D9E0)
-val Border = Color(0xFFE0E3EB)
+val Bg = Color(0xFF0B1120)
+val Surface = Color(0xFF151C2E)
+val Surface2 = Color(0xFF1B2438)
+val SurfaceDim = Color(0xFF222C42)
+val Border = Color(0xFF222C42)
 
-val Text = Color(0xFF172033)
-val TextSecondary = Color(0xFF5F6880)
-val TextMuted = Color(0xFF7D869B)
+val Text = Color(0xFFE8EDF6)
+val TextSecondary = Color(0xFF8A95AD)
+val TextMuted = Color(0xFF64748B)
 
 val Accent = Primary
 val Accent2 = Secondary
 
-val Good = Color(0xFF15803D)
-val GoodBg = Color(0xFFE8F5E9)
-val Warn = Color(0xFFB7791F)
-val WarnBg = Color(0xFFFFF4D8)
-val Bad = Color(0xFFB91C1C)
-val BadBg = Color(0xFFFFEBEE)
+val Good = Color(0xFF34D399)
+val GoodBg = Color(0xFF0B2E22)
+val Warn = Color(0xFFFBBF24)
+val WarnBg = Color(0xFF33260A)
+val Bad = Color(0xFFF87171)
+val BadBg = Color(0xFF3A1518)

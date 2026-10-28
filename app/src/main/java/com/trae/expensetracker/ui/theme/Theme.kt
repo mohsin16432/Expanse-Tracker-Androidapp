@@ -2,17 +2,18 @@ package com.trae.expensetracker.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-private val AppColors = lightColorScheme(
+private val AppColors = darkColorScheme(
     primary = Primary,
-    onPrimary = Surface,
+    onPrimary = Color(0xFFF8FAFF),
     primaryContainer = PrimaryContainer,
-    onPrimaryContainer = Text,
+    onPrimaryContainer = Color(0xFFDCE8FF),
     secondary = Secondary,
-    onSecondary = Surface,
+    onSecondary = Color(0xFFF8FAFF),
     secondaryContainer = SecondaryContainer,
     onSecondaryContainer = Text,
     background = Bg,
@@ -23,7 +24,7 @@ private val AppColors = lightColorScheme(
     onSurfaceVariant = TextSecondary,
     outline = Border,
     error = Bad,
-    onError = Surface,
+    onError = Color(0xFFF8FAFF),
     errorContainer = BadBg,
     onErrorContainer = Bad,
 )
